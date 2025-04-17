@@ -20,12 +20,12 @@ In theory, only the class name needs to be adjusted here and the frequency of pi
 **3**
 With the collected data, a neural network is trained.
 The architecture can be chosen freely.
-[Script](https://github.com/Tarn017/Object-Classification-using-ESP-Cam/blob/main/files/abfrage.py)
+[Script](https://github.com/Tarn017/Object-Classification-using-ESP-Cam/blob/main/files/CNN.py)
 
 **4**
 The trained network can then be used for predictions (classification).
 It is important to adjust the class names and, in particular, bring them into the order in which the folders were stored.
-[Script](https://github.com/Tarn017/Object-Classification-using-ESP-Cam/blob/main/files/abfrage.py)
+[Script](https://github.com/Tarn017/Object-Classification-using-ESP-Cam/blob/main/files/klassifizierung.py)
 
 **5**
 Below is an automated classification script.
@@ -33,9 +33,11 @@ It receives a number from the Arduino.
 If this number matches a specific value, classification is triggered.
 This way, classification is only performed when, for example, a button is pressed.
 The result of the classification is then sent back to the Arduino.
+[Script](https://github.com/Tarn017/Object-Classification-using-ESP-Cam/blob/main/files/sendenEmpfangen.py)
 
 **6**
 Below is the script for the Arduino.
 It currently works so that it sends a signal when a button is pressed.
 Then a classification is triggered, and the Arduino receives the result.
 With if-conditions, it reacts accordingly.
+[Script](https://github.com/Tarn017/Object-Classification-using-ESP-Cam/blob/main/files/wifi.ino)
