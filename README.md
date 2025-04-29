@@ -47,8 +47,8 @@ With if-conditions, it reacts accordingly.
 
 **Download**
 
-Download the following script: [obj](https://github.com/Tarn017/Object-Classification-using-ESP-Cam/blob/main/files/wifi.ino). It contains all relevant functions.
-
+Download the following script: [obj](https://github.com/Tarn017/Object-Classification-using-ESP-Cam/blob/main/files/obj.py). It contains all relevant functions.
+Arduino-Code:  [script](https://github.com/Tarn017/Object-Classification-using-ESP-Cam/blob/main/files/NanoEsp_classification.ino)
 **Explanation**
 
 Import the functions into your script: `from obj import abfrage, training_classification, testen_classification, neural_network_classification`
@@ -87,7 +87,8 @@ neural_network_classification(url, arduino_ip, ordner, port)
 # Object detection
 **Download**
 
-Download the following script: [obj](https://github.com/Tarn017/Object-Classification-using-ESP-Cam/blob/main/files/wifi.ino). It contains all relevant functions.
+Download the following script: [obj](https://github.com/Tarn017/Object-Classification-using-ESP-Cam/blob/main/files/obj.py). It contains all relevant functions.
+Arduino-Code: [script]( https://github.com/Tarn017/Object-Classification-using-ESP-Cam/blob/main/files/NanoEsp.ino)
 
 **Explanation**
 
