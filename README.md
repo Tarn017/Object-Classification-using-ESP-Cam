@@ -41,3 +41,28 @@ It currently works so that it sends a signal when a button is pressed.
 Then a classification is triggered, and the Arduino receives the result.
 With if-conditions, it reacts accordingly.
 [Script](https://github.com/Tarn017/Object-Classification-using-ESP-Cam/blob/main/files/wifi.ino)
+
+
+# Object Classification 
+
+**Download**
+
+Download the following script: [obj](https://github.com/Tarn017/Object-Classification-using-ESP-Cam/blob/main/files/wifi.ino). It contains all relevant functions.
+
+**Explanation**
+
+Import the functions into your script: `from obj import abfrage, training_classification, testen_classification, neural_network_classification`
+
+How to use the functions:
+
+`abfrage(url, interval, klasse)`: Serves the purpose of data collection. 'url' is the url of the ESPcam. It's printed on the Serial Monitor of the Arduino IDE when you upload the arduino code. 'interval' refers to the amount of pictores taken. `interval=0.5` is euivalent to a picture taken every 0.5 seconds. 'klasse' refers to the name of the object you're taking the pictures of.
+
+`training_classification(ordner, model_name, epochen)`: Function to train the neural network. 'ordner' refers to the directory where the pictures are saved, defaul: ordner='daten'.'model_name': Choose a name for your model with the ending .keras. 'epochen' equals the numer of training epochs.
+
+`result, confidence = testen(url, model_name, ordner)`: Takes a picture and classifies it using the model <model_name>. 
+
+`neural_network_classification(url, arduino_ip, ordner, port)`: Establishes a connection to the ESPcam as well as to the Arduino Nano esp. If it receives the command from the arduino, a picture is taken and classified afterwards. The result will be sent back to the Arduino. 'arduino_ip' is printed on the Serial Monitor of the arduino IDE when the according code is uploaded. The port needs to be defined in the code itself.
+
+
+
+
