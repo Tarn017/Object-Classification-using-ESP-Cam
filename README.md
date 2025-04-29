@@ -53,7 +53,7 @@ Download the following script: [obj](https://github.com/Tarn017/Object-Classific
 
 Import the functions into your script: `from obj import abfrage, training_classification, testen_classification, neural_network_classification`
 
-How to use the functions:
+**How to use the functions:**
 
 `abfrage(url, interval, klasse)`: Serves the purpose of data collection. 'url' is the url of the ESPcam. It's printed on the Serial Monitor of the Arduino IDE when you upload the arduino code. 'interval' refers to the amount of pictores taken. `interval=0.5` is euivalent to a picture taken every 0.5 seconds. 'klasse' refers to the name of the object you're taking the pictures of.
 
@@ -62,6 +62,27 @@ How to use the functions:
 `result, confidence = testen(url, model_name, ordner)`: Takes a picture and classifies it using the model <model_name>. 
 
 `neural_network_classification(url, arduino_ip, ordner, port)`: Establishes a connection to the ESPcam as well as to the Arduino Nano esp. If it receives the command from the arduino, a picture is taken and classified afterwards. The result will be sent back to the Arduino. 'arduino_ip' is printed on the Serial Monitor of the arduino IDE when the according code is uploaded. The port needs to be defined in the code itself.
+
+**Example**
+```python
+url = 'http://192.168.1.100/capture' #URL der ESPcam -> Diese wird direkt auf dem Serial Monitor von Arduino ausgegeben
+ordner = 'daten' #Den Order definieren, in dem die Unterordner mit den Bildern liegen (Standardmäßig in "daten") (Object Classification)
+model_name = "objekt_klassifikator.keras" #Definieren des Namens des Modells !muss mit .keras enden! (Object Classification)
+epochen = 15 #Anzahl der Trainingsepochen
+interval = 0.5 #Intervall in dem die Bilder aufgenommen werden. Hier: alle 0.5 Sekunden
+arduino_ip = '192.168.1.102' #IP des Arduino Nano Esp. Wird in arduino ausgegeben
+port = 12345 #Port des Arduinos. Wird im Arduino-Code festgelegt
+
+klasse = 'schachtel' #für welche Klasse sollen Daten gesammelt werden?
+abfrage(url, interval, klasse) #Start des Daten sammelns
+
+training_classification(ordner, model_name, epochen) #Training eines Neuronalen Netzes zur Bildklassifizierung
+
+result, confidence = testen(url, model_name, ordner) #Es wird ein Bild mit der cam aufgenommen und klassifiziert. result entspricht Klasse und conf der Wahrscheinlichkeit
+print(result)
+
+neural_network_classification(url, arduino_ip, ordner, port)
+
 
 
 
