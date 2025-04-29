@@ -81,7 +81,7 @@ training_classification(ordner, model_name, epochen) # Train a neural network fo
 result, confidence = testen(url, model_name, ordner) # Capture an image with the camera and classify it; result = class, confidence = probability
 print(result)
 
-neural_network_classification(url, arduino_ip, ordner, port)
+neural_network_classification(url, arduino_ip, ordner, port)```
 
 # Object detection
 
