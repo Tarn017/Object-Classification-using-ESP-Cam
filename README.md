@@ -65,23 +65,25 @@ Import the functions into your script: `from obj import abfrage, training_classi
 
 **Example**
 ```python
-url = 'http://192.168.1.100/capture' #URL der ESPcam -> Diese wird direkt auf dem Serial Monitor von Arduino ausgegeben
-ordner = 'daten' #Den Order definieren, in dem die Unterordner mit den Bildern liegen (Standardmäßig in "daten") (Object Classification)
-model_name = "objekt_klassifikator.keras" #Definieren des Namens des Modells !muss mit .keras enden! (Object Classification)
-epochen = 15 #Anzahl der Trainingsepochen
-interval = 0.5 #Intervall in dem die Bilder aufgenommen werden. Hier: alle 0.5 Sekunden
-arduino_ip = '192.168.1.102' #IP des Arduino Nano Esp. Wird in arduino ausgegeben
-port = 12345 #Port des Arduinos. Wird im Arduino-Code festgelegt
+url = 'http://192.168.1.100/capture' # URL of the ESP32-CAM -> This is displayed directly in the Arduino Serial Monitor
+ordner = 'daten' # Define the folder where the subfolders with the images are located (default: "daten") (Object Classification)
+model_name = "objekt_klassifikator.keras" # Define the name of the model; must end with .keras (Object Classification)
+epochen = 15 # Number of training epochs
+interval = 0.5 # Interval at which images are captured; here: every 0.5 seconds
+arduino_ip = '192.168.1.102' # IP address of the Arduino Nano ESP; displayed in Arduino Serial Monitor
+port = 12345 # Port of the Arduino; defined in the Arduino code
 
-klasse = 'schachtel' #für welche Klasse sollen Daten gesammelt werden?
-abfrage(url, interval, klasse) #Start des Daten sammelns
+klasse = 'schachtel' # For which class should data be collected?
+abfrage(url, interval, klasse) # Start data collection
 
-training_classification(ordner, model_name, epochen) #Training eines Neuronalen Netzes zur Bildklassifizierung
+training_classification(ordner, model_name, epochen) # Train a neural network for image classification
 
-result, confidence = testen(url, model_name, ordner) #Es wird ein Bild mit der cam aufgenommen und klassifiziert. result entspricht Klasse und conf der Wahrscheinlichkeit
+result, confidence = testen(url, model_name, ordner) # Capture an image with the camera and classify it; result = class, confidence = probability
 print(result)
 
 neural_network_classification(url, arduino_ip, ordner, port)
+
+# Object detection
 
 
 
