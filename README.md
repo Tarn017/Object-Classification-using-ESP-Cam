@@ -4,7 +4,7 @@
 **Software:** Arduino, Python
 
 **1**
-Set up the ESP32-CAM following this guide (Downloading the package including the CameraWebServer is enough):
+Set up the ESP32-CAM following this guide (Downloading the package including the CameraWebServer is enough) (Falls Link nicht mehr geht, den namen des links einfach so googeln):
 [Getting Started With ESP32-CAM: A Beginner's Guide](https://randomnerdtutorials.com/getting-started-with-esp32-cam/)
 If you are using a FTDI adapter connect the ESP32-CAM to the adapter and connect the adapter to the laptop.
 To boot, connect IO0 to GND, then disconnect this connection and press the RESET button.
