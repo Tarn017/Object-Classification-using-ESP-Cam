@@ -12,7 +12,7 @@ If you are using a USB module directly connected to the cam, just connect it dir
 
 In the Arduino code, only the Wi-Fi router information needs to be adjusted.
 Afterwards, an IP address will be displayed on the Serial Monitor.
-You can capture an image via browser or Python using <IP>/capture in your browser.
+You can capture an image via browser or Python using IP/capture in your browser.
 
 # Object Classification 
 
