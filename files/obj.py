@@ -12,8 +12,10 @@ from ultralytics import YOLO
 from roboflow import Roboflow
 from PIL import Image
 import cv2
+import matplotlib.pyplot as plt
+from sklearn.metrics import accuracy_score, f1_score
 
-def abfrage(url, interval, klasse):
+def aufnahme(url, interval, klasse, ordner):
     # URL des ESP32-CAM /capture Endpunkts
     url = url
 
@@ -21,9 +23,7 @@ def abfrage(url, interval, klasse):
     interval = interval
 
     # Pfad zum Speicherordner
-    save_path = 'daten/'+klasse
-
-    # Überprüfen, ob der Speicherordner existiert, andernfalls erstellen
+    save_path = os.path.join(ordner, klasse)
     os.makedirs(save_path, exist_ok=True)
 
     while True:
@@ -57,7 +57,7 @@ def get_class_names(train_dir):
         if os.path.isdir(os.path.join(train_dir, d))
     ])
 
-def training_classification(ordner, model_name, epochen):
+def training_classification_demo(ordner, model_name, epochen):
     # Datenverzeichnis anpassen
     train_dir = ordner + '/'
 
@@ -116,37 +116,327 @@ def training_classification(ordner, model_name, epochen):
     # Modell speichern
     model.save(model_name)
 
-def testen_classification(url, model, ordner):
+def training_classification(ordner, model_name, epochen, n_full, pool_size, conv_filter, filter_size, droprate=0.0, resize=None, padding=False, val_ordner=None, aug_parameter=None):
+    train_dir = ordner + '/'
+    val_dir = val_ordner
+    val_set = None
+
+    # irgendeine Datei aus dem Ordner nehmen
+    sample_path = os.path.join(train_dir, os.listdir(train_dir)[0],
+                               os.listdir(os.path.join(train_dir, os.listdir(train_dir)[0]))[0])
+    with Image.open(sample_path) as img:
+        img_width, img_height = img.size  # PIL gibt (Breite, Höhe)
+    print(f"Ermittelte Bildgröße der Trainingsdaten: {img_height}x{img_width}")
+
+    if val_ordner is not None:
+        sample_path = os.path.join(val_dir, os.listdir(val_dir)[0],
+                                   os.listdir(os.path.join(val_dir, os.listdir(val_dir)[0]))[0])
+        with Image.open(sample_path) as img:
+            img_width2, img_height2 = img.size  # PIL gibt (Breite, Höhe)
+        print(f"Ermittelte Bildgröße der Validierungsdaten: {img_height2}x{img_width2}")
+
+
     # Bildparameter
-    img_height = 240
-    img_width = 320
+    img_height = img_height
+    img_width = img_width
+    batch_size = 32
+
+    if resize==None:
+        # Trainings- und Validierungsdatensätze erstellen
+        dataset = image_dataset_from_directory(
+            train_dir,
+            seed=123,
+            image_size=(img_height, img_width),
+            batch_size=batch_size,
+            label_mode='categorical'  # Mehrklassen-Klassifikation
+        )
+        num_classes = len(dataset.class_names)
+        print("Datensatz in Originalgröße verarbeitet")
+        if val_ordner is not None:
+            if padding == False:
+                val_set = image_dataset_from_directory(
+                    val_dir,
+                    seed=123,
+                    image_size=(img_height, img_width),
+                    batch_size=batch_size,
+                    label_mode='categorical'  # Mehrklassen-Klassifikation
+                )
+                if img_height==img_height2 and img_width==img_width2:
+                    print("Validierungsdaten in Originalgröße verarbeitet")
+                else:
+                    print(f"Validierungsdaten wurden ohne Padding von {img_height2}x{img_width2} auf {img_height}x{img_width} skaliert")
+            elif padding == True:
+                val_set = image_dataset_from_directory(
+                    val_dir,
+                    seed=123,
+                    image_size=(img_height2, img_width2),
+                    batch_size=batch_size,
+                    label_mode='categorical'  # Mehrklassen-Klassifikation
+                )
+
+                def resize_with_padding(image, label):
+                    image = tf.image.resize_with_pad(image, img_height, img_width)
+                    return image, label
+
+                val_set = val_set.map(resize_with_padding)
+                if img_height==img_height2 and img_width==img_width2:
+                    print("Validierungsdaten in Originalgröße verarbeitet")
+                else:
+                    print(f"Validierungsdaten wurden mit Padding von {img_height2}x{img_width2} auf {img_height}x{img_width} skaliert")
+
+    elif resize[0] is not None:
+        if padding==False:
+            dataset = tf.keras.utils.image_dataset_from_directory(
+                train_dir,
+                seed=123,
+                image_size=(resize[0], resize[1]),  # hartes Resize
+                batch_size=batch_size,
+                label_mode='categorical'
+            )
+            img_height=resize[0]
+            img_width=resize[1]
+            num_classes = len(dataset.class_names)
+            print("Datensatz resized ohne Padding ", resize)
+            if val_ordner is not None:
+                val_set = image_dataset_from_directory(
+                    val_dir,
+                    seed=123,
+                    image_size=(resize[0], resize[1]),
+                    batch_size=batch_size,
+                    label_mode='categorical'  # Mehrklassen-Klassifikation
+                )
+                if img_height==img_height2 and img_width==img_width2:
+                    print("Validierungsdaten in Originalgröße verarbeitet")
+                else:
+                    print(f"Validierungsdaten wurden ohne Padding von {img_height2}x{img_width2} auf {resize[0]}x{resize[1]} skaliert")
+
+        elif padding==True:
+            dataset = tf.keras.utils.image_dataset_from_directory(
+                train_dir,
+                seed=123,
+                image_size=(img_height, img_width),  # Originalgröße
+                batch_size=batch_size,
+                label_mode='categorical'
+            )
+            img_height=resize[0]
+            img_width=resize[1]
+            print("Datensatz resized mit padding ", resize)
+
+            def resize_with_padding(image, label):
+                image = tf.image.resize_with_pad(image, resize[0], resize[1])
+                return image, label
+
+            num_classes = len(dataset.class_names)
+            dataset = dataset.map(resize_with_padding)
+            if val_ordner is not None:
+                val_set = image_dataset_from_directory(
+                    val_dir,
+                    seed=123,
+                    image_size=(img_height2, img_width2),
+                    batch_size=batch_size,
+                    label_mode='categorical'  # Mehrklassen-Klassifikation
+                )
+
+                def resize_with_padding(image, label):
+                    image = tf.image.resize_with_pad(image, resize[0], resize[1])
+                    return image, label
+
+                val_set = val_set.map(resize_with_padding)
+                if img_height==img_height2 and img_width==img_width2:
+                    print("Validierungsdaten in Originalgröße verarbeitet")
+                else:
+                    print(f"Validierungsdaten wurden mit Padding von {img_height2}x{img_width2} auf {resize[0]}x{resize[1]} skaliert")
+
+    else:
+        raise ValueError("Wert von resize muss die Form [Höhe,Breite] haben")
+
+
+    # Dataset normalisieren
+    AUTOTUNE = tf.data.AUTOTUNE
+
+    # Normalisieren
+    normalization_layer = layers.Rescaling(1. / 255)
+    dataset = dataset.map(lambda x, y: (normalization_layer(x), y),
+                          num_parallel_calls=AUTOTUNE)
+    if val_ordner is not None:
+        val_set = val_set.map(lambda x, y: (normalization_layer(x), y),
+                              num_parallel_calls=AUTOTUNE)
+
+    if aug_parameter is not None:
+        # Augmentation nur fürs Training
+        data_augmentation = tf.keras.Sequential(
+            [
+                layers.RandomFlip(aug_parameter[0]),
+                layers.RandomRotation(aug_parameter[1]),
+                layers.RandomZoom(aug_parameter[2]),
+                layers.RandomContrast(aug_parameter[3]),
+            ],
+            name="data_augmentation",
+        )
+        print("Augmentation aktiv")
+        dataset = dataset.map(lambda x, y: (data_augmentation(x, training=True), y),
+                              num_parallel_calls=AUTOTUNE)
+
+    # Pipeline tunen
+    dataset = dataset.prefetch(AUTOTUNE)
+    if val_ordner is not None:
+        val_set = val_set.prefetch(AUTOTUNE)
+
+    # CNN-Modell definieren
+    model = models.Sequential()
+    model.add(layers.Conv2D(conv_filter[0], (filter_size, filter_size), activation='relu', input_shape=(img_height, img_width, 3)))
+    model.add(layers.MaxPooling2D((pool_size, pool_size)))
+    for i in range(len(conv_filter)-1):
+        model.add(layers.Conv2D(conv_filter[i+1], (filter_size, filter_size), activation='relu'))
+        model.add(layers.MaxPooling2D((pool_size, pool_size)))
+
+    model.add(layers.Flatten())
+    #model.add(layers.GlobalAveragePooling2D(name="gap"))
+    for i in range(len(n_full)):
+        model.add(layers.Dense(n_full[i], activation='relu'))
+        model.add(layers.Dropout(droprate))
+
+    model.add(layers.Dense(num_classes, activation='softmax'))  # 4 statt 3 Klassen
+
+    # Modellkompilierung
+    model.compile(optimizer='adam',
+                  loss='categorical_crossentropy',
+                  metrics=['accuracy'])
+
+    if val_ordner is not None:
+        history = model.fit(dataset, validation_data=val_set, epochs=epochen)
+    else:
+        history = model.fit(dataset, epochs=epochen)
+
+    if val_set is not None:
+        results = model.evaluate(val_set, verbose=0)
+        print(results)
+    # Modell speichern
+    model.save(model_name)
+    print(model.summary())
+
+def validation_classification(model, val_ordner, padding=False):
+    # --- Bild-Params (wie im Training) ---
+    sample_path = os.path.join(val_ordner, os.listdir(val_ordner)[0],
+                               os.listdir(os.path.join(val_ordner, os.listdir(val_ordner)[0]))[0])
+    with Image.open(sample_path) as img:
+        img_width, img_height = img.size  # PIL gibt (Breite, Höhe)
+    print(f"Ermittelte Bildgröße der Validierungsbilder: {img_height}x{img_width}")
+
+    # --- Modell laden ---
+    model = keras.models.load_model(model)
+    print(f"Ermittelte Bildgröße des Modells: {model.input_shape[1]}x{model.input_shape[2]}")
+    img_size = (model.input_shape[1], model.input_shape[2])
+    batch_size = 32
+
+    if padding==False:
+        val_ds = keras.utils.image_dataset_from_directory(
+            val_ordner,
+            image_size=img_size,
+            batch_size=batch_size,
+            shuffle=False,
+            label_mode="int"
+        )
+        class_names = val_ds.class_names
+        print(f"Größe Bilder im Datensatz: {img_height}x{img_width} vs. im Modell: {img_size}")
+    elif padding==True:
+        val_ds = keras.utils.image_dataset_from_directory(
+            val_ordner,
+            image_size=(img_height,img_width),
+            batch_size=batch_size,
+            shuffle=False,
+            label_mode="int"
+        )
+        class_names = val_ds.class_names
+        print(f"Datensatz von {img_height}x{img_width} resized mit padding auf {img_size}")
+
+        def resize_with_padding(image, label):
+            image = tf.image.resize_with_pad(image, img_size[0], img_size[1])
+            return image, label
+
+        val_ds = val_ds.map(resize_with_padding)
+
+    print("Klassen (aus val_daten abgeleitet):", class_names)
+
+    # --- gleiche Vorverarbeitung wie im Training: Resize + Rescaling(1/255) ---
+    normalization = keras.layers.Rescaling(1. / 255)
+    val_ds = val_ds.map(lambda x, y: (normalization(x), y))
+
+    # --- Vorhersagen einsammeln ---
+    y_true, y_pred = [], []
+    for images, labels in val_ds:
+        probs = model.predict(images, verbose=0)
+        preds = np.argmax(probs, axis=1)
+        y_true.extend(labels.numpy())
+        y_pred.extend(preds)
+
+    y_true = np.array(y_true)
+    y_pred = np.array(y_pred)
+
+    # --- Metriken ---
+    acc = accuracy_score(y_true, y_pred)
+    f1_weight = f1_score(y_true, y_pred, average="weighted")
+    f1_per_cls = f1_score(y_true, y_pred, average=None)  # array in Klassenreihenfolge
+
+    print(f"\nValidation Accuracy: {acc:.4f}")
+    print(f"F1 (weighted):       {f1_weight:.4f}")
+    print("\nF1 pro Klasse:")
+    for name, f1c in zip(class_names, f1_per_cls):
+        print(f"  {name:>12}: {f1c:.4f}")
+
+def testen_classification(url, model, ordner, padding=False, live=False, interval=3):
+
+    model = keras.models.load_model(model)
+    # Bildparameter
+    img_height = model.input_shape[1]
+    img_width = model.input_shape[2]
 
     # Klassenbezeichnungen
     class_names = get_class_names(ordner)
     print(class_names)
 
-    # Modell laden
-    model = keras.models.load_model("objekt_klassifikator.keras")
-
     def capture_image():
         """Nimmt ein einzelnes Bild von der ESP32-CAM auf und speichert es unter dem gleichen Namen."""
-        filename = 'latest_capture.jpg'
+        filename = 'latest_pic.jpg'
         try:
             response = requests.get(url, timeout=5)
             if response.status_code == 200:
                 with open(filename, 'wb') as f:
                     f.write(response.content)
                 print(f'Bild gespeichert: {filename}')
-                return filename
+                with Image.open(filename) as img:
+                    width, height = img.size  # PIL gibt (Breite, Höhe)
+                print(f"Ermittelte Bildgröße der Validierungsbilder: {height}x{width}")
+                return filename, height, width
             else:
                 print(f'Fehler: Statuscode {response.status_code}')
         except requests.RequestException as e:
             print(f'Anfrage fehlgeschlagen: {e}')
         return None
 
-    def classify_image(image_path):
+    def classify_image(image_path, height, width):
+
         """Klassifiziert ein einzelnes Bild mit dem geladenen Modell."""
-        img = keras.preprocessing.image.load_img(image_path, target_size=(img_height, img_width))
+        if padding==False:
+            img = keras.preprocessing.image.load_img(image_path, target_size=(img_height, img_width))
+            img.save("latest_pic_not_padded.jpg")
+            if(img_height==height and img_width==width):
+                print(f"Bilder besitzen die richtige Größe {img_height}x{img_width}")
+            else:
+                print(f"Bilder werden ohne Padding von {height}x{width} auf {img_height}x{img_width} skaliert")
+
+        elif padding==True:
+            img = keras.preprocessing.image.load_img(image_path)
+            img = keras.preprocessing.image.img_to_array(img)
+            img = tf.image.resize_with_pad(img, img_height, img_width)
+            img_to_save = tf.cast(tf.clip_by_value(img, 0, 255), tf.uint8).numpy()
+            Image.fromarray(img_to_save).save("latest_pic_padded.jpg")
+
+            if(img_height==height and img_width==width):
+                print(f"Bilder besitzen die richtige Größe {img_height}x{img_width}")
+            else:
+                print(f"Bilder werden mit Padding von {height}x{width} auf {img_height}x{img_width} skaliert")
+
         img_array = keras.preprocessing.image.img_to_array(img)
         img_array = np.expand_dims(img_array, axis=0) / 255.0
         predictions = model.predict(img_array)
@@ -156,14 +446,18 @@ def testen_classification(url, model, ordner):
         return class_names[predicted_class], confidence
 
     # Bild aufnehmen und klassifizieren
-    image_path = capture_image()
-    if image_path:
-        result, confidence = classify_image(image_path)
-        print(f"Das Bild enthält: {result} (Sicherheit: {confidence:.2f})")
-        return result, confidence
-    return None
+    while True:
+        image_path, height, width = capture_image()
+        if image_path:
+            result, confidence = classify_image(image_path, height, width)
+            print(f"Das Bild enthält: {result} (Sicherheit: {confidence:.2f})")
+            if live==False:
+                return result, confidence
+        if live==False:
+            return None
+        time.sleep(interval)
 
-def neural_network_classification(url, arduino_ip, ordner, port):
+def neural_network_classification(url, arduino_ip, ordner, port, model, padding=False):
     arduino_ip = arduino_ip  # IP-Adresse des Arduino
     port = port  # Muss mit der Portnummer im Arduino-Sketch übereinstimmen
 
@@ -179,35 +473,61 @@ def neural_network_classification(url, arduino_ip, ordner, port):
     esp32_url = url
 
     # Bildparameter
-    img_height = 240
-    img_width = 320
+    sample_path = os.path.join(ordner, os.listdir(ordner)[0],
+                               os.listdir(os.path.join(ordner, os.listdir(ordner)[0]))[0])
+    with Image.open(sample_path) as img:
+        img_width, img_height = img.size  # PIL gibt (Breite, Höhe)
+    print(f"Ermittelte Bildgröße der Validierungsbilder: {img_height}x{img_width}")
 
     # Klassenbezeichnungen
     class_names = get_class_names(ordner)
     print(class_names)
 
     # Modell laden
-    model = keras.models.load_model("objekt_klassifikator.keras")
+    model = keras.models.load_model(model)
 
     def capture_image():
         """Nimmt ein einzelnes Bild von der ESP32-CAM auf und speichert es unter dem gleichen Namen."""
-        filename = 'latest_capture.jpg'
+        filename = 'latest_pic.jpg'
         try:
             response = requests.get(url, timeout=5)
             if response.status_code == 200:
                 with open(filename, 'wb') as f:
                     f.write(response.content)
                 print(f'Bild gespeichert: {filename}')
-                return filename
+                with Image.open(filename) as img:
+                    width, height = img.size  # PIL gibt (Breite, Höhe)
+                print(f"Ermittelte Bildgröße der Aufnahme: {height}x{width}")
+                return filename, height, width
             else:
                 print(f'Fehler: Statuscode {response.status_code}')
         except requests.RequestException as e:
             print(f'Anfrage fehlgeschlagen: {e}')
         return None
 
-    def classify_image(image_path):
+    def classify_image(image_path, height, width):
+
         """Klassifiziert ein einzelnes Bild mit dem geladenen Modell."""
-        img = keras.preprocessing.image.load_img(image_path, target_size=(img_height, img_width))
+        if padding==False:
+            img = keras.preprocessing.image.load_img(image_path, target_size=(img_height, img_width))
+            img.save("latest_pic_not_padded.jpg")
+            if(img_height==height and img_width==width):
+                print(f"Bilder besitzen die richtige Größe {img_height}x{img_width}")
+            else:
+                print(f"Bilder werden ohne Padding von {height}x{width} auf {img_height}x{img_width} skaliert")
+
+        elif padding==True:
+            img = keras.preprocessing.image.load_img(image_path)
+            img = keras.preprocessing.image.img_to_array(img)
+            img = tf.image.resize_with_pad(img, img_height, img_width)
+            img_to_save = tf.cast(tf.clip_by_value(img, 0, 255), tf.uint8).numpy()
+            Image.fromarray(img_to_save).save("latest_pic_padded.jpg")
+
+            if(img_height==height and img_width==width):
+                print(f"Bilder besitzen die richtige Größe {img_height}x{img_width}")
+            else:
+                print(f"Bilder werden mit Padding von {height}x{width} auf {img_height}x{img_width} skaliert")
+
         img_array = keras.preprocessing.image.img_to_array(img)
         img_array = np.expand_dims(img_array, axis=0) / 255.0
         predictions = model.predict(img_array)
@@ -217,9 +537,9 @@ def neural_network_classification(url, arduino_ip, ordner, port):
         return class_names[predicted_class], confidence
 
     # Bild aufnehmen und klassifizieren
-    image_path = capture_image()
+    image_path, height, width = capture_image()
     if image_path:
-        result, confidence = classify_image(image_path)
+        result, confidence = classify_image(image_path, height, width)
         print(f"Das Bild enthält: {result} (Sicherheit: {confidence:.2f})")
 
     #########################################################################################################
@@ -235,9 +555,9 @@ def neural_network_classification(url, arduino_ip, ordner, port):
                     received_values.append(value)  # Wert in die Liste speichern
                     print(f"Empfangen und gespeichert: {value}")
                     if (value == 42):
-                        image_path = capture_image()
+                        image_path, height, width = capture_image()
                         if image_path:
-                            result, confidence = classify_image(image_path)
+                            result, confidence = classify_image(image_path, height, width)
                             result_str = f"{result},{confidence}\n"
                             print(f"Das Bild enthält: {result} (Sicherheit: {confidence:.2f})")
                             client_socket.sendall(result_str.encode())
@@ -402,7 +722,7 @@ def neural_network_detection(url, arduino_ip, port, model, conf_thresh):
                     print(f"Fehler beim Konvertieren: {response}")  # Falls ungültige Daten empfangen werden
 
             # Falls du eine Bedingung zum Stoppen willst (z. B. nach 10 Werten)
-            if len(received_values) >= 10:
+            if len(received_values) >= 300:
                 print("Genug Werte empfangen, beende die Verbindung.")
                 break
 
