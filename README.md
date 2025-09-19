@@ -1,4 +1,4 @@
-# First steps
+# Computer Vision using ESP-Cam
 
 **Material:** ESP32-CAM, ESP32_CAM-adapter, Arduino Nano ESP32, Wi-Fi router
 **Software:** Arduino, Python
@@ -14,17 +14,22 @@ In the Arduino code, only the Wi-Fi router information needs to be adjusted.
 After booting and pressing the reset button, an IP address will be displayed on the Serial Monitor.
 You can capture an image via browser or Python using ServerAddress/capture in your browser.
 
+**2**
+A complete guide of how to use the programs can be found here:
+
 # Object Classification 
 
 **Download**
 
 Download the following script: [obj](https://github.com/Tarn017/Object-Classification-using-ESP-Cam/blob/main/files/obj.py). It contains all relevant functions.
+
 Arduino-Code:  [script](https://github.com/Tarn017/Object-Classification-using-ESP-Cam/blob/main/files/NanoEsp_classification.ino)
 
 **Explanation**
 
 Import the following functions into your script: `from obj import abfrage, training_classification, testen_classification, neural_network_classification`
-A detailed explanation of the functions and other things can be found here: [Object_Classification](https://github.com/Tarn017/Object-Classification-using-ESP-Cam/blob/main/files/NanoEsp.ino)
+
+A detailed explanation of the functions and other things can be found here: [Object_Classification](https://github.com/Tarn017/Object-Classification-using-ESP-Cam/blob/main/files/Klassifizierung%20im%20CNN.docx)
 
 **How to use the functions:**
 
@@ -83,19 +88,22 @@ neural_network_classification(url, arduino_ip, ordner, port, model_name)
 ```
 
 # Object detection
+
 **Download**
 
 Download the following script: [obj](https://github.com/Tarn017/Object-Classification-using-ESP-Cam/blob/main/files/obj.py). It contains all relevant functions.
+
 Arduino-Code: [script]( https://github.com/Tarn017/Object-Classification-using-ESP-Cam/blob/main/files/NanoEsp.ino)
 
 **Explanation**
 
 Import the following functions into your script: `from obj import abfrage, training_detection, testen_detection, neural_network_detection`
-A detailed explanation of the functions and other things can be found here: [Object_Detection](https://github.com/Tarn017/Object-Classification-using-ESP-Cam/blob/main/files/NanoEsp.ino)
+
+A detailed explanation of the functions and other things can be found here: [Object_Detection](https://github.com/Tarn017/Object-Classification-using-ESP-Cam/blob/main/files/Detection%20im%20CNN.docx)
 
 **How to use the functions:**
 
-`abfrage(url, interval, klasse)`: Serves the purpose of data collection. 'url' is the url of the ESPcam. It's printed on the Serial Monitor of the Arduino IDE when you upload the arduino code. 'interval' refers to the amount of pictores taken. `interval=0.5` is euivalent to a picture taken every 0.5 seconds. 'klasse' refers to the name of the object you're taking the pictures of.
+`aufnahme(url, interval, klasse, ordner)`: Serves the purpose of data collection. 'url' is the url of the ESPcam. It's printed on the Serial Monitor of the Arduino IDE when you upload the arduino code. 'interval' refers to the amount of pictores taken. `interval=0.5` is euivalent to a picture taken every 0.5 seconds. 'klasse' refers to the name of the object you're taking the pictures of. However, the class is not relevant in case of object detection as the pictures are annotated in the next step.
 
 Label your collected data. For example, you can use *roboflow* (recommended). Use YOLO v8 format. Create the dataset and download it via code. Example:
 
@@ -106,11 +114,11 @@ project = rf.workspace("workspace").project("bottlez")
 version = project.version(2)
 ```
 
-`training_detection(version, epochen)`: Function to train the neural network. It uses YOLO v8 to create a detection model. 'epochen' equals the numer of training epochs.
+`training_detection(dataset, epochen, img_size)`: Function to train the neural network. It uses YOLO v8 to create a detection model.
 
-`result = testen_detection(url, model, conf_thresh = 0.2)`: Takes a picture and and performs object detection. 'model' refers to the path of the trainied model, usually something like `model = 'runs/detect/train/weights/best.pt'`. 'conf_thesh' refers to the treshold of detection. Is the result of the dtection lower, then no object is detected. Something between 0 and 1.
+`result = testen_detection(url, model, conf_thresh, img_size)`: Takes a picture and and performs object detection. 'model' refers to the path of the trainied model, usually something like `model = 'runs/detect/train/weights/best.pt'`. 'conf_thesh' refers to the treshold of detection. Is the result of the dtection lower, then no object is detected. Value between 0 and 1.
 
-`neural_network_detection(url, arduino_ip, port, model, conf_thresh=0.1)`: Establishes a connection to the ESPcam as well as to the Arduino Nano esp. If it receives the command from the arduino, a picture is taken and object detection is performed afterwards. The result is sent back to the Arduino. 'arduino_ip' is printed on the Serial Monitor of the arduino IDE when the according code is uploaded. The port needs to be defined in the code itself.
+`neural_network_detection(url, arduino_ip, port, model, conf_thresh)`: Establishes a connection to the ESPcam as well as to the Arduino Nano esp. If it receives the command from the arduino, a picture is taken and object detection is performed afterwards. The result is sent back to the Arduino. 'arduino_ip' is printed on the Serial Monitor of the arduino IDE when the according code is uploaded. The port needs to be defined in the code itself.
 
 **Example**
 ```python
