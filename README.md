@@ -1,6 +1,6 @@
 # First steps
 
-**Material:** ESP32-CAM, Serial to USB adapter, Arduino Nano ESP32, Wi-Fi router
+**Material:** ESP32-CAM, ESP32_CAM-adapter, Arduino Nano ESP32, Wi-Fi router
 **Software:** Arduino, Python
 
 **1**
@@ -8,10 +8,10 @@ Set up the ESP32-CAM following this guide (Downloading the package including the
 [Getting Started With ESP32-CAM: A Beginner's Guide](https://randomnerdtutorials.com/getting-started-with-esp32-cam/)
 If you are using a FTDI adapter connect the ESP32-CAM to the adapter and connect the adapter to the laptop.
 To boot, connect IO0 to GND, then disconnect this connection and press the RESET button.
-If you are using a USB module directly connected to the cam, just connect it directly.
+If you are using a USB module, just connect it directly.
 
 In the Arduino code, only the Wi-Fi router information needs to be adjusted.
-Afterwards, an IP address will be displayed on the Serial Monitor.
+After booting and pressing the reset button, an IP address will be displayed on the Serial Monitor.
 You can capture an image via browser or Python using ServerAddress/capture in your browser.
 
 # Object Classification 
@@ -20,19 +20,23 @@ You can capture an image via browser or Python using ServerAddress/capture in yo
 
 Download the following script: [obj](https://github.com/Tarn017/Object-Classification-using-ESP-Cam/blob/main/files/obj.py). It contains all relevant functions.
 Arduino-Code:  [script](https://github.com/Tarn017/Object-Classification-using-ESP-Cam/blob/main/files/NanoEsp_classification.ino)
+
 **Explanation**
 
-Import the functions into your script: `from obj import abfrage, training_classification, testen_classification, neural_network_classification`
+Import the following functions into your script: `from obj import abfrage, training_classification, testen_classification, neural_network_classification`
+A detailed explanation of the functions and other things can be found here: [Object_Classification](https://github.com/Tarn017/Object-Classification-using-ESP-Cam/blob/main/files/NanoEsp.ino)
 
 **How to use the functions:**
 
-`abfrage(url, interval, klasse)`: Serves the purpose of data collection. 'url' is the url of the ESPcam. It's printed on the Serial Monitor of the Arduino IDE when you upload the arduino code. 'interval' refers to the amount of pictores taken. `interval=0.5` is euivalent to a picture taken every 0.5 seconds. 'klasse' refers to the name of the object you're taking the pictures of.
+`aufnahme(url, interval, klasse, ordner)`: Serves the purpose of data collection. 'url' is the url of the ESPcam. It's printed on the Serial Monitor of the Arduino IDE when you upload the arduino code. 'interval' refers to the amount of pictores taken. `interval=0.5` is euivalent to a picture taken every 0.5 seconds. 'klasse' refers to the name of the object you're taking the pictures of.
 
-`training_classification(ordner, model_name, epochen)`: Function to train the neural network. 'ordner' refers to the directory where the pictures are saved, defaul: ordner='daten'.'model_name': Choose a name for your model with the ending .keras. 'epochen' equals the numer of training epochs.
+`training_classification(ordner, model_name, epochen, n_full, pool_size, conv_filter, filter_size, droprate, resize padding, val_ordner, aug_parameter,)`: Function to train the neural network. It automatically generates and trains a neural Network with the chosen parameters and saves it as 'model_name'.
 
-`result, confidence = testen(url, model_name, ordner)`: Takes a picture and classifies it using the model <model_name>. 
+`validation_classification(model, val_ordner, padding)`: Given validation data in a directory with the same structure as the directory the model was trained on. With this function, the model can be tested on this data.
 
-`neural_network_classification(url, arduino_ip, ordner, port)`: Establishes a connection to the ESPcam as well as to the Arduino Nano esp. If it receives the command from the arduino, a picture is taken and classified afterwards. The result is sent back to the Arduino. 'arduino_ip' is printed on the Serial Monitor of the arduino IDE when the according code is uploaded. The port needs to be defined in the code itself.
+`result, confidence = testen_classification(url, model, ordner, padding, live, interval)`: Takes a picture and classifies it using the model <model_name>. If live=True, it takes a picture every <interval> second and classifies it until the program is terminated.
+
+`neural_network_classification(url, arduino_ip, ordner, port, model)`: Establishes a connection to the ESPcam as well as to the Arduino Nano esp. If it receives the command from the arduino, a picture is taken and classified afterwards. The result is sent back to the Arduino. 'arduino_ip' is printed on the Serial Monitor of the arduino IDE when the according [code](https://github.com/Tarn017/Object-Classification-using-ESP-Cam/blob/main/files/NanoEsp_classification.ino) is uploaded. The port needs to be defined in the code, default=12345.
 
 **Example**
 ```python
@@ -45,14 +49,37 @@ arduino_ip = '192.168.1.102' # IP address of the Arduino Nano ESP; displayed in 
 port = 12345 # Port of the Arduino; defined in the Arduino code
 
 klasse = 'schachtel' # For which class should data be collected?
-abfrage(url, interval, klasse) # Start data collection
+aufnahme(url, 
+         interval, 
+         klasse, 
+         ordner)  # Start data collection
 
-training_classification(ordner, model_name, epochen) # Train a neural network for image classification
+training_classification(ordner,
+                        model_name,
+                        epochen,
+                        n_full = [512],
+                        pool_size = 2,
+                        conv_filter=[32, 64, 128, 256],
+                        filter_size=3,
+                        droprate=0.5,
+                        resize=[160,160],
+                        padding=True,
+                        val_ordner='daten3val',
+                        aug_parameter=['vertical', 0.6,0.05,0.1])   # Train a neural network for image classification
 
-result, confidence = testen(url, model_name, ordner) # Capture an image with the camera and classify it; result = class, confidence = probability
+Validation_classification(model_name,
+                          val_ordner="daten3val",
+                          padding=True)  #Test neural Network on collected data
+
+result, confidence = testen_classification(url, 
+                      model_name, 
+                      ordner, 
+                      padding=False, 
+                      live=True, 
+                      interval=5)  # Capture an image with the camera every 5 seconds and classify it; result = class, confidence = probability
 print(result)
 
-neural_network_classification(url, arduino_ip, ordner, port)
+neural_network_classification(url, arduino_ip, ordner, port, model_name)
 ```
 
 # Object detection
@@ -63,7 +90,8 @@ Arduino-Code: [script]( https://github.com/Tarn017/Object-Classification-using-E
 
 **Explanation**
 
-Import the functions into your script: `from obj import abfrage, training_detection, testen_detection, neural_network_detection`
+Import the following functions into your script: `from obj import abfrage, training_detection, testen_detection, neural_network_detection`
+A detailed explanation of the functions and other things can be found here: [Object_Detection](https://github.com/Tarn017/Object-Classification-using-ESP-Cam/blob/main/files/NanoEsp.ino)
 
 **How to use the functions:**
 
