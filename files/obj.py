@@ -273,6 +273,7 @@ def training_classification(ordner, model_name, epochen, n_full, pool_size, conv
             ],
             name="data_augmentation",
         )
+
         print("Augmentation aktiv")
         dataset = dataset.map(lambda x, y: (data_augmentation(x, training=True), y),
                               num_parallel_calls=AUTOTUNE)
@@ -572,14 +573,13 @@ def neural_network_classification(url, arduino_ip, ordner, port, model, padding=
     finally:
         client_socket.close()
 
-def training_detection(version, epochen):
-    dataset = version.download("yolov8")
+def training_detection(dataset, epochen, img_size=(640,640)):
 
     # YOLO-Modell laden
     model = YOLO('yolov8n.pt')
 
     # Training starten
-    results = model.train(data=os.path.join(dataset.location, 'data.yaml'), epochs=epochen, imgsz=320)
+    results = model.train(data=os.path.join(dataset.location, 'data.yaml'), epochs=epochen, imgsz=img_size)
 
     # Modell auf TEST-Daten evaluieren
     metrics = model.val(data=os.path.join(dataset.location, 'data.yaml'), split='test')
@@ -604,10 +604,14 @@ def capture_image(url):
         print(f'Anfrage fehlgeschlagen: {e}')
     return None
 
-def testen_detection(url, model, conf_thresh):
+def testen_detection(url, model, conf_thresh, img_size=None):
     model = YOLO(model)
     capture_image(url)
-    results = model.predict(source='latest_capture.jpg', conf=conf_thresh)
+    if img_size is None:
+        results = model.predict(source='latest_capture.jpg', conf=conf_thresh)
+    else:
+        results = model.predict(source='latest_capture.jpg', imgsz=img_size, conf=conf_thresh)
+
     # Ergebnisse extrahieren (Liste von Result-Objekten, hier nur 1 Bild → results[0])
     result = results[0]
     detections = []
@@ -625,7 +629,7 @@ def testen_detection(url, model, conf_thresh):
 
     annotated_img = result.plot()
     annotated_pil = Image.fromarray(annotated_img)
-    annotated_pil.save('annotated_latest.jpg')
+    annotated_pil.save('latest_capture_annotated.jpg')
 
     # 3 Sekunden warten
     if detections:
