@@ -3,7 +3,15 @@
 **Material:** ESP32-CAM, ESP32_CAM-adapter, Arduino Nano ESP32, Wi-Fi router
 **Software:** Arduino, Python
 
-**1**
+1.	EspCam mit Adapter verbinden
+2.	esp32 by Espressif im Boardmanager installieren
+3.	Öffne: File -> Examples -> Esp32 -> Camera -> CameraWebServer
+4.	Ergänze Wlan-Daten in CameraWebServer.ino
+5.	In der Leiste oben auf board_config.h wechseln
+6.	#define CAMERA_MODEL_WROVER_KIT mit // auskommentieren
+7.	Vor #define CAMERA_MODEL_AI_THINKER  // entfernen
+8.	Zurück in CameraWebServer.ino passenden Port auswählen und als Board unter esp32 AI Thinker Esp32-Cam
+
 Set up the ESP32-CAM following this guide (Downloading the package including the CameraWebServer is enough) (Falls Link nicht mehr geht, den namen des links einfach so googeln):
 [Getting Started With ESP32-CAM: A Beginner's Guide](https://randomnerdtutorials.com/getting-started-with-esp32-cam/)
 If you are using a FTDI adapter connect the ESP32-CAM to the adapter and connect the adapter to the laptop.
@@ -13,9 +21,6 @@ If you are using a USB module, just connect it directly.
 In the Arduino code, only the Wi-Fi router information needs to be adjusted.
 After booting and pressing the reset button, an IP address will be displayed on the Serial Monitor.
 You can capture an image via browser or Python using ServerAddress/capture in your browser.
-
-**2**
-A complete guide of how to use the programs can be found here:
 
 # Object Classification 
 
