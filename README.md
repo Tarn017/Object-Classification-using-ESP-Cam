@@ -14,6 +14,8 @@
 7.	Vor #define CAMERA_MODEL_AI_THINKER  // entfernen
 8.	Zurück in CameraWebServer.ino passenden Port auswählen und als Board unter esp32 "AI Thinker Esp32-Cam"
 
+Eine genauere Beschreibung der einzelnen Schritte findet sich unter [Getting Started With ESP32-CAM](https://lastminuteengineers.com/getting-started-with-esp32-cam/)
+
 # Object Classification 
 
 **Download**
