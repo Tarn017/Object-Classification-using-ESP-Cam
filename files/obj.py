@@ -14,10 +14,17 @@ from PIL import Image
 import cv2
 import matplotlib.pyplot as plt
 from sklearn.metrics import accuracy_score, f1_score
+from tensorflow.keras import regularizers
+import json
+
+def url_capture(url: str) -> str:
+    if url.endswith('/capture'):
+        return url
+    return url.rstrip('/') + '/capture'
 
 def aufnahme(url, interval, klasse, ordner):
     # URL des ESP32-CAM /capture Endpunkts
-    url = url
+    url = url_capture(url)
 
     # Intervall zwischen den Aufnahmen in Sekunden
     interval = interval
@@ -116,7 +123,7 @@ def training_classification_demo(ordner, model_name, epochen):
     # Modell speichern
     model.save(model_name)
 
-def training_classification(ordner, model_name, epochen, n_full, pool_size, conv_filter, filter_size, droprate=0.0, resize=None, padding=False, val_ordner=None, aug_parameter=None):
+def FFN(ordner, model_name, epochen, n_full, droprate=0.0, resize=None, padding=False, val_ordner=None, aug_parameter=None, alpha=0):
     train_dir = ordner + '/'
     val_dir = val_ordner
     val_set = None
@@ -285,14 +292,220 @@ def training_classification(ordner, model_name, epochen, n_full, pool_size, conv
 
     # CNN-Modell definieren
     model = models.Sequential()
-    model.add(layers.Conv2D(conv_filter[0], (filter_size, filter_size), activation='relu', input_shape=(img_height, img_width, 3)))
+    model.add(layers.Flatten(input_shape=(img_height, img_width, 3)))
+
+    for i in range(len(n_full)-1):
+        model.add(layers.Dense(n_full[i], kernel_regularizer=regularizers.l2(alpha), use_bias=False))
+        model.add(layers.BatchNormalization())
+        model.add(layers.Activation('relu'))
+        model.add(layers.Dropout(droprate))
+
+    model.add(layers.Dense(num_classes, activation='softmax'))
+
+    # Modellkompilierung
+    model.compile(optimizer='adam',
+                  loss='categorical_crossentropy',
+                  metrics=['accuracy'])
+
+    if val_ordner is not None:
+        history = model.fit(dataset, validation_data=val_set, epochs=epochen)
+    else:
+        history = model.fit(dataset, epochs=epochen)
+
+    if val_set is not None:
+        results = model.evaluate(val_set, verbose=0)
+        print(results)
+    # Modell speichern
+    model.save(model_name)
+    print(model.summary())
+
+def training_classification(ordner, model_name, epochen, n_full, pool_size, conv_filter, filter_size, droprate=0.0, resize=None, padding=False, val_ordner=None, aug_parameter=None, alpha=0):
+    train_dir = ordner + '/'
+    val_dir = val_ordner
+    val_set = None
+
+    # irgendeine Datei aus dem Ordner nehmen
+    sample_path = os.path.join(train_dir, os.listdir(train_dir)[0],
+                               os.listdir(os.path.join(train_dir, os.listdir(train_dir)[0]))[0])
+    with Image.open(sample_path) as img:
+        img_width, img_height = img.size  # PIL gibt (Breite, Höhe)
+    print(f"Ermittelte Bildgröße der Trainingsdaten: {img_height}x{img_width}")
+
+    if val_ordner is not None:
+        sample_path = os.path.join(val_dir, os.listdir(val_dir)[0],
+                                   os.listdir(os.path.join(val_dir, os.listdir(val_dir)[0]))[0])
+        with Image.open(sample_path) as img:
+            img_width2, img_height2 = img.size  # PIL gibt (Breite, Höhe)
+        print(f"Ermittelte Bildgröße der Validierungsdaten: {img_height2}x{img_width2}")
+
+
+    # Bildparameter
+    img_height = img_height
+    img_width = img_width
+    batch_size = 32
+
+    if resize==None:
+        # Trainings- und Validierungsdatensätze erstellen
+        dataset = image_dataset_from_directory(
+            train_dir,
+            seed=123,
+            image_size=(img_height, img_width),
+            batch_size=batch_size,
+            label_mode='categorical'  # Mehrklassen-Klassifikation
+        )
+        num_classes = len(dataset.class_names)
+        print("Datensatz in Originalgröße verarbeitet")
+        if val_ordner is not None:
+            if padding == False:
+                val_set = image_dataset_from_directory(
+                    val_dir,
+                    seed=123,
+                    image_size=(img_height, img_width),
+                    batch_size=batch_size,
+                    label_mode='categorical'  # Mehrklassen-Klassifikation
+                )
+                if img_height==img_height2 and img_width==img_width2:
+                    print("Validierungsdaten in Originalgröße verarbeitet")
+                else:
+                    print(f"Validierungsdaten wurden ohne Padding von {img_height2}x{img_width2} auf {img_height}x{img_width} skaliert")
+            elif padding == True:
+                val_set = image_dataset_from_directory(
+                    val_dir,
+                    seed=123,
+                    image_size=(img_height2, img_width2),
+                    batch_size=batch_size,
+                    label_mode='categorical'  # Mehrklassen-Klassifikation
+                )
+
+                def resize_with_padding(image, label):
+                    image = tf.image.resize_with_pad(image, img_height, img_width)
+                    return image, label
+
+                val_set = val_set.map(resize_with_padding)
+                if img_height==img_height2 and img_width==img_width2:
+                    print("Validierungsdaten in Originalgröße verarbeitet")
+                else:
+                    print(f"Validierungsdaten wurden mit Padding von {img_height2}x{img_width2} auf {img_height}x{img_width} skaliert")
+
+    elif resize[0] is not None:
+        if padding==False:
+            dataset = tf.keras.utils.image_dataset_from_directory(
+                train_dir,
+                seed=123,
+                image_size=(resize[0], resize[1]),  # hartes Resize
+                batch_size=batch_size,
+                label_mode='categorical'
+            )
+            img_height=resize[0]
+            img_width=resize[1]
+            num_classes = len(dataset.class_names)
+            print("Datensatz resized ohne Padding ", resize)
+            if val_ordner is not None:
+                val_set = image_dataset_from_directory(
+                    val_dir,
+                    seed=123,
+                    image_size=(resize[0], resize[1]),
+                    batch_size=batch_size,
+                    label_mode='categorical'  # Mehrklassen-Klassifikation
+                )
+                if img_height==img_height2 and img_width==img_width2:
+                    print("Validierungsdaten in Originalgröße verarbeitet")
+                else:
+                    print(f"Validierungsdaten wurden ohne Padding von {img_height2}x{img_width2} auf {resize[0]}x{resize[1]} skaliert")
+
+        elif padding==True:
+            dataset = tf.keras.utils.image_dataset_from_directory(
+                train_dir,
+                seed=123,
+                image_size=(img_height, img_width),  # Originalgröße
+                batch_size=batch_size,
+                label_mode='categorical'
+            )
+            img_height=resize[0]
+            img_width=resize[1]
+            print("Datensatz resized mit padding ", resize)
+
+            def resize_with_padding(image, label):
+                image = tf.image.resize_with_pad(image, resize[0], resize[1])
+                return image, label
+
+            num_classes = len(dataset.class_names)
+            dataset = dataset.map(resize_with_padding)
+            if val_ordner is not None:
+                val_set = image_dataset_from_directory(
+                    val_dir,
+                    seed=123,
+                    image_size=(img_height2, img_width2),
+                    batch_size=batch_size,
+                    label_mode='categorical'  # Mehrklassen-Klassifikation
+                )
+
+                def resize_with_padding(image, label):
+                    image = tf.image.resize_with_pad(image, resize[0], resize[1])
+                    return image, label
+
+                val_set = val_set.map(resize_with_padding)
+                if img_height==img_height2 and img_width==img_width2:
+                    print("Validierungsdaten in Originalgröße verarbeitet")
+                else:
+                    print(f"Validierungsdaten wurden mit Padding von {img_height2}x{img_width2} auf {resize[0]}x{resize[1]} skaliert")
+
+    else:
+        raise ValueError("Wert von resize muss die Form [Höhe,Breite] haben")
+
+
+    # Dataset normalisieren
+    AUTOTUNE = tf.data.AUTOTUNE
+
+    # Normalisieren
+    normalization_layer = layers.Rescaling(1. / 255)
+    dataset = dataset.map(lambda x, y: (normalization_layer(x), y),
+                          num_parallel_calls=AUTOTUNE)
+    if val_ordner is not None:
+        val_set = val_set.map(lambda x, y: (normalization_layer(x), y),
+                              num_parallel_calls=AUTOTUNE)
+
+    if aug_parameter is not None:
+        # Augmentation nur fürs Training
+        data_augmentation = tf.keras.Sequential(
+            [
+                layers.RandomFlip(aug_parameter[0]),
+                layers.RandomRotation(aug_parameter[1]),
+                layers.RandomZoom(aug_parameter[2]),
+                layers.RandomContrast(aug_parameter[3]),
+            ],
+            name="data_augmentation",
+        )
+
+        print("Augmentation aktiv")
+        dataset = dataset.map(lambda x, y: (data_augmentation(x, training=True), y),
+                              num_parallel_calls=AUTOTUNE)
+
+    # Pipeline tunen
+    dataset = dataset.prefetch(AUTOTUNE)
+    if val_ordner is not None:
+        val_set = val_set.prefetch(AUTOTUNE)
+
+    # CNN-Modell definieren
+    model = models.Sequential()
+    model.add(layers.Conv2D(conv_filter[0], (filter_size, filter_size),
+                            use_bias=False, input_shape=(img_height, img_width, 3)))
+    model.add(layers.BatchNormalization())
+    model.add(layers.ReLU())
+    """
+    if aug_parameter is not None:
+        model.add(layers.GaussianNoise(aug_parameter[4]))
+    """
     model.add(layers.MaxPooling2D((pool_size, pool_size)))
     for i in range(len(conv_filter)-1):
-        model.add(layers.Conv2D(conv_filter[i+1], (filter_size, filter_size), activation='relu'))
+        model.add(layers.Conv2D(conv_filter[i + 1], (filter_size, filter_size),
+                                use_bias=False, kernel_regularizer=regularizers.l2(alpha)))
+        model.add(layers.BatchNormalization())
+        model.add(layers.ReLU())
         model.add(layers.MaxPooling2D((pool_size, pool_size)))
 
-    model.add(layers.Flatten())
-    #model.add(layers.GlobalAveragePooling2D(name="gap"))
+    #model.add(layers.Flatten())
+    model.add(layers.GlobalAveragePooling2D(name="gap"))
     for i in range(len(n_full)):
         model.add(layers.Dense(n_full[i], activation='relu'))
         model.add(layers.Dropout(droprate))
@@ -386,7 +599,7 @@ def validation_classification(model, val_ordner, padding=False):
         print(f"  {name:>12}: {f1c:.4f}")
 
 def testen_classification(url, model, ordner, padding=False, live=False, interval=3):
-
+    url = url_capture(url)
     model = keras.models.load_model(model)
     # Bildparameter
     img_height = model.input_shape[1]
@@ -461,6 +674,7 @@ def testen_classification(url, model, ordner, padding=False, live=False, interva
 def neural_network_classification(url, arduino_ip, ordner, port, model, padding=False):
     arduino_ip = arduino_ip  # IP-Adresse des Arduino
     port = port  # Muss mit der Portnummer im Arduino-Sketch übereinstimmen
+    url = url_capture(url)
 
     # Socket erstellen
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -605,6 +819,7 @@ def capture_image(url):
     return None
 
 def testen_detection(url, model, conf_thresh, img_size=None):
+    url = url_capture(url)
     model = YOLO(model)
     capture_image(url)
     if img_size is None:
@@ -651,6 +866,7 @@ def testen_detection(url, model, conf_thresh, img_size=None):
 def neural_network_detection(url, arduino_ip, port, model, conf_thresh):
     arduino_ip = arduino_ip  # IP-Adresse des Arduino
     port = port  # Muss mit der Portnummer im Arduino-Sketch übereinstimmen
+    url = url_capture(url)
 
     # Socket erstellen
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -689,20 +905,28 @@ def neural_network_detection(url, arduino_ip, port, model, conf_thresh):
 
         # 3 Sekunden warten
         if detections:
-            # Nur das erste erkannte Objekt verwenden
-            det = detections[0]
-            label = det['label']
-            conf = round(det['confidence'], 2)
-            x1, y1, x2, y2 = [int(coord) for coord in det['bbox']]
+            compact = []
+            for d in detections:
+                compact.append({
+                    "label": d["label"],
+                    "confidence": round(float(d["confidence"]), 2),  # runden um Platz zu sparen
+                    "bbox": [int(coord) for coord in d["bbox"]]  # optional: ints statt floats
+                })
+
+            json_str = json.dumps(compact, separators=(',', ':'))  # compact JSON
+            # Einfach eine Zeilen-terminierte Nachricht senden
+            client_socket.sendall((json_str + "\n").encode())
         else:
             # Kein Objekt erkannt
-            label = "none"
-            conf = 0
-            x1 = y1 = x2 = y2 = 0
-
-        # Arduino-freundlicher, einfacher CSV-String
-        result_str = f"{label},{conf},{x1},{y1},{x2},{y2}\n"
-        return result_str
+            compact = []
+            compact.append({
+                "label": "none",
+                "confidence": 0,  # runden um Platz zu sparen
+                "bbox": [0.0,0.0,0.0,0.0] # optional: ints statt floats
+            })
+            json_str = json.dumps(compact, separators=(',', ':'))  # compact JSON
+            # Einfach eine Zeilen-terminierte Nachricht senden
+            client_socket.sendall((json_str + "\n").encode())
 
     #########################################################################################################
 
@@ -719,8 +943,7 @@ def neural_network_detection(url, arduino_ip, port, model, conf_thresh):
                     if (value == 42):
                         image_path = capture_image(url)
                         if image_path:
-                            result_str = classify_image(image_path)
-                            client_socket.sendall(result_str.encode())
+                            classify_image(image_path)
 
                 except ValueError:
                     print(f"Fehler beim Konvertieren: {response}")  # Falls ungültige Daten empfangen werden
