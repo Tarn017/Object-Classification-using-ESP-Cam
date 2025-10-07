@@ -95,7 +95,7 @@ neural_network_classification(url, arduino_ip, ordner, port, model_name)
 
 Download the following script: [obj](https://github.com/Tarn017/Object-Classification-using-ESP-Cam/blob/main/files/obj.py). It contains all relevant functions.
 
-Arduino-Code: [script]( https://github.com/Tarn017/Object-Classification-using-ESP-Cam/blob/main/files/NanoEsp.ino)
+Arduino-Code: [script](https://github.com/Tarn017/Object-Classification-using-ESP-Cam/blob/main/files/NanoEsp.ino)
 
 You have to upload the Arduino-Code to your Microcontroller if you want to be able to use Object detection with it. After the upload, the IP will be displayed on the Serial Monitor.
 
