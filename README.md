@@ -44,7 +44,7 @@ A detailed explanation of the functions and other things can be found here: [Obj
 
 **Example**
 ```python
-url = 'http://192.168.1.100/capture' # URL of the ESP32-CAM -> This is displayed directly in the Arduino Serial Monitor
+url = 'http://192.168.1.100' # URL of the ESP32-CAM -> This is displayed directly in the Arduino Serial Monitor
 ordner = 'daten' # Define the folder where the subfolders with the images are located (default: "daten") (Object Classification)
 model_name = "objekt_klassifikator.keras" # Define the name of the model; must end with .keras (Object Classification)
 epochen = 15 # Number of training epochs
@@ -122,7 +122,7 @@ version = project.version(2)
 
 **Example**
 ```python
-url = 'http://192.168.1.100/capture' # URL of the ESP32-CAM -> This is displayed directly in the Arduino Serial Monitor
+url = 'http://192.168.1.100' # URL of the ESP32-CAM -> This is displayed directly in the Arduino Serial Monitor
 epochen = 15 # Number of training epochs
 interval = 0.5 # Interval at which images are captured; here: every 0.5 seconds
 arduino_ip = '192.168.1.102' # IP address of the Arduino Nano ESP; displayed in Arduino Serial Monitor
