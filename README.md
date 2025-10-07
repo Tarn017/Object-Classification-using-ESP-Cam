@@ -10,8 +10,8 @@
 3.	Öffne: File -> Examples -> Esp32 -> Camera -> CameraWebServer
 4.	Ergänze Wlan-Daten in CameraWebServer.ino
 5.	In der Leiste oben auf board_config.h wechseln
-6.	#define CAMERA_MODEL_WROVER_KIT mit // auskommentieren
-7.	Vor #define CAMERA_MODEL_AI_THINKER  // entfernen
+6.	`#define CAMERA_MODEL_WROVER_KIT` mit // auskommentieren
+7.	Vor `#define CAMERA_MODEL_AI_THINKER`  // entfernen
 8.	Zurück in CameraWebServer.ino passenden Port auswählen und als Board unter esp32 "AI Thinker Esp32-Cam"
 
 Eine genauere Beschreibung der einzelnen Schritte findet sich unter [Getting Started With ESP32-CAM](https://lastminuteengineers.com/getting-started-with-esp32-cam/)
