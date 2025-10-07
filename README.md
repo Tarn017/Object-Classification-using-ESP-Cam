@@ -24,6 +24,8 @@ Download the following script: [obj](https://github.com/Tarn017/Object-Classific
 
 Arduino-Code:  [script](https://github.com/Tarn017/Object-Classification-using-ESP-Cam/blob/main/files/NanoEsp_classification.ino)
 
+You have to upload the Arduino-Code to your Microcontroller if you want to be able to use Classification with it. After the upload, the IP will be displayed on the Serial Monitor.
+
 **Explanation**
 
 Import the following functions into your script: `from obj import abfrage, training_classification, testen_classification, neural_network_classification`
@@ -95,6 +97,8 @@ Download the following script: [obj](https://github.com/Tarn017/Object-Classific
 
 Arduino-Code: [script]( https://github.com/Tarn017/Object-Classification-using-ESP-Cam/blob/main/files/NanoEsp.ino)
 
+You have to upload the Arduino-Code to your Microcontroller if you want to be able to use Object detection with it. After the upload, the IP will be displayed on the Serial Monitor.
+
 **Explanation**
 
 Import the following functions into your script: `from obj import abfrage, training_detection, testen_detection, neural_network_detection`
@@ -133,13 +137,16 @@ rf = Roboflow(api_key="Zbo6tBzjKmXWSq7ndLDS")
 project = rf.workspace("karlsruher-institut-fr-technologie-7bdnc").project("bottlezml")
 version = project.version(2)
 
-training_detection(version, epochen)
+training_detection(dataset,
+                   epochen=20,
+                   img_size=(320,320))
+
 model = 'runs/detect/train/weights/best.pt'
 
 result = testen_detection(url, model, conf_thresh = 0.2)
 print(result)
 
-neural_network_detection(url, arduino_ip, port, model, conf_thresh=0.1)
+neural_network_detection(url, arduino_ip, port, model, conf_thresh=0.3)
 ```
 
 
