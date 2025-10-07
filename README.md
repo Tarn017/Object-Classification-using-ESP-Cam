@@ -3,6 +3,8 @@
 **Material:** ESP32-CAM, ESP32_CAM-adapter, Arduino Nano ESP32, Wi-Fi router
 **Software:** Arduino, Python
 
+**Einrichten der EspCam:**
+
 1.	EspCam mit Adapter verbinden
 2.	esp32 by Espressif im Boardmanager installieren
 3.	Öffne: File -> Examples -> Esp32 -> Camera -> CameraWebServer
