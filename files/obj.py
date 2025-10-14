@@ -16,6 +16,9 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import accuracy_score, f1_score
 from tensorflow.keras import regularizers
 import json
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.optimizers.schedules import CosineDecay
+
 
 def url_capture(url: str) -> str:
     if url.endswith('/capture'):
@@ -123,7 +126,7 @@ def training_classification_demo(ordner, model_name, epochen):
     # Modell speichern
     model.save(model_name)
 
-def FFN(ordner, model_name, epochen, n_full, droprate=0.0, resize=None, padding=False, val_ordner=None, aug_parameter=None, alpha=0):
+def FFN(ordner, model_name, epochen, n_full, droprate=0.0, resize=None, padding=False, val_ordner=None, aug_parameter=None, alpha=0, lr=0.001, decay=True):
     train_dir = ordner + '/'
     val_dir = val_ordner
     val_set = None
@@ -287,6 +290,22 @@ def FFN(ordner, model_name, epochen, n_full, droprate=0.0, resize=None, padding=
 
     # Pipeline tunen
     dataset = dataset.prefetch(AUTOTUNE)
+
+    initial_lr = lr  # z. B. 1e-3
+    card = tf.data.experimental.cardinality(dataset).numpy()  # -1=INFINITE, -2=UNKNOWN
+    if card <= 0:
+        # Fallback: wenn dir train_samples und batch_size bekannt sind, nimm:
+        # steps_per_epoch = math.ceil(train_samples / batch_size)
+        raise ValueError("steps_per_epoch konnte nicht bestimmt werden. Bitte angeben oder Fallback setzen.")
+    steps_per_epoch = int(card)
+    decay_steps = epochen * steps_per_epoch  # Gesamtanzahl Schritte
+    dec = 1e-5 / initial_lr
+    lr_schedule = CosineDecay(
+        initial_learning_rate=initial_lr,
+        decay_steps=decay_steps,
+        alpha=dec
+    )
+
     if val_ordner is not None:
         val_set = val_set.prefetch(AUTOTUNE)
 
@@ -294,8 +313,8 @@ def FFN(ordner, model_name, epochen, n_full, droprate=0.0, resize=None, padding=
     model = models.Sequential()
     model.add(layers.Flatten(input_shape=(img_height, img_width, 3)))
 
-    for i in range(len(n_full)-1):
-        model.add(layers.Dense(n_full[i], kernel_regularizer=regularizers.l2(alpha), use_bias=False))
+    for i in range(len(n_full)):
+        model.add(layers.Dense(n_full[i], kernel_regularizer=regularizers.l2(alpha), use_bias=False, kernel_initializer='he_normal'))
         model.add(layers.BatchNormalization())
         model.add(layers.Activation('relu'))
         model.add(layers.Dropout(droprate))
@@ -303,9 +322,16 @@ def FFN(ordner, model_name, epochen, n_full, droprate=0.0, resize=None, padding=
     model.add(layers.Dense(num_classes, activation='softmax'))
 
     # Modellkompilierung
-    model.compile(optimizer='adam',
-                  loss='categorical_crossentropy',
-                  metrics=['accuracy'])
+    if decay is True:
+        model.compile(optimizer=Adam(learning_rate=lr_schedule),
+                      loss='categorical_crossentropy',
+                      metrics=['accuracy'])
+        print("Mit lr-decay")
+    else:
+        model.compile(optimizer=Adam(learning_rate=lr),
+                      loss='categorical_crossentropy',
+                      metrics=['accuracy'])
+
 
     if val_ordner is not None:
         history = model.fit(dataset, validation_data=val_set, epochs=epochen)
@@ -319,7 +345,7 @@ def FFN(ordner, model_name, epochen, n_full, droprate=0.0, resize=None, padding=
     model.save(model_name)
     print(model.summary())
 
-def training_classification(ordner, model_name, epochen, n_full, pool_size, conv_filter, filter_size, droprate=0.0, resize=None, padding=False, val_ordner=None, aug_parameter=None, alpha=0):
+def training_classification(ordner, model_name, epochen, n_full, pool_size, conv_filter, filter_size, stride=None, droprate=0.0, resize=None, padding=False, val_ordner=None, aug_parameter=None, alpha=0, lr=0.001, decay=True):
     train_dir = ordner + '/'
     val_dir = val_ordner
     val_set = None
@@ -483,23 +509,44 @@ def training_classification(ordner, model_name, epochen, n_full, pool_size, conv
 
     # Pipeline tunen
     dataset = dataset.prefetch(AUTOTUNE)
+
+    initial_lr = lr  # z. B. 1e-3
+    card = tf.data.experimental.cardinality(dataset).numpy()  # -1=INFINITE, -2=UNKNOWN
+    if card <= 0:
+        # Fallback: wenn dir train_samples und batch_size bekannt sind, nimm:
+        # steps_per_epoch = math.ceil(train_samples / batch_size)
+        raise ValueError("steps_per_epoch konnte nicht bestimmt werden. Bitte angeben oder Fallback setzen.")
+    steps_per_epoch = int(card)
+    decay_steps = epochen * steps_per_epoch  # Gesamtanzahl Schritte
+    dec = 1e-5 / initial_lr
+    lr_schedule = CosineDecay(
+        initial_learning_rate=initial_lr,
+        decay_steps=decay_steps,
+        alpha=dec
+    )
+
     if val_ordner is not None:
         val_set = val_set.prefetch(AUTOTUNE)
 
     # CNN-Modell definieren
     model = models.Sequential()
-    model.add(layers.Conv2D(conv_filter[0], (filter_size, filter_size),
-                            use_bias=False, input_shape=(img_height, img_width, 3)))
-    model.add(layers.BatchNormalization())
-    model.add(layers.ReLU())
+    model.add(layers.Input(shape=(img_height, img_width, 3)))
+
     """
     if aug_parameter is not None:
         model.add(layers.GaussianNoise(aug_parameter[4]))
     """
-    model.add(layers.MaxPooling2D((pool_size, pool_size)))
-    for i in range(len(conv_filter)-1):
-        model.add(layers.Conv2D(conv_filter[i + 1], (filter_size, filter_size),
-                                use_bias=False, kernel_regularizer=regularizers.l2(alpha)))
+    #model.add(layers.MaxPooling2D((pool_size, pool_size)))
+    for i in range(len(conv_filter)):
+        model.add(layers.Conv2D(
+            conv_filter[i],
+            (filter_size, filter_size),
+            strides=(1, 1),
+            #padding='same',
+            use_bias=False,
+            kernel_regularizer=regularizers.l2(alpha),
+            kernel_initializer='he_normal'
+        ))
         model.add(layers.BatchNormalization())
         model.add(layers.ReLU())
         model.add(layers.MaxPooling2D((pool_size, pool_size)))
@@ -507,15 +554,21 @@ def training_classification(ordner, model_name, epochen, n_full, pool_size, conv
     #model.add(layers.Flatten())
     model.add(layers.GlobalAveragePooling2D(name="gap"))
     for i in range(len(n_full)):
-        model.add(layers.Dense(n_full[i], activation='relu'))
+        model.add(layers.Dense(n_full[i], activation='relu', kernel_initializer='he_normal'))
         model.add(layers.Dropout(droprate))
 
     model.add(layers.Dense(num_classes, activation='softmax'))  # 4 statt 3 Klassen
 
     # Modellkompilierung
-    model.compile(optimizer='adam',
-                  loss='categorical_crossentropy',
-                  metrics=['accuracy'])
+    if decay is True:
+        model.compile(optimizer=Adam(learning_rate=lr_schedule),
+                      loss='categorical_crossentropy',
+                      metrics=['accuracy'])
+        print("Mit lr-decay")
+    else:
+        model.compile(optimizer=Adam(learning_rate=lr),
+                      loss='categorical_crossentropy',
+                      metrics=['accuracy'])
 
     if val_ordner is not None:
         history = model.fit(dataset, validation_data=val_set, epochs=epochen)
@@ -597,6 +650,7 @@ def validation_classification(model, val_ordner, padding=False):
     print("\nF1 pro Klasse:")
     for name, f1c in zip(class_names, f1_per_cls):
         print(f"  {name:>12}: {f1c:.4f}")
+    return acc
 
 def testen_classification(url, model, ordner, padding=False, live=False, interval=3):
     url = url_capture(url)
