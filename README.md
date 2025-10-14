@@ -13,6 +13,7 @@
 6.	`#define CAMERA_MODEL_WROVER_KIT` mit // auskommentieren
 7.	Vor `#define CAMERA_MODEL_AI_THINKER`  // entfernen
 8.	Zurück in CameraWebServer.ino passenden Port auswählen und als Board unter esp32 "AI Thinker Esp32-Cam"
+9.	Code uploaden
 
 Eine genauere Beschreibung der einzelnen Schritte findet sich unter [Getting Started With ESP32-CAM](https://lastminuteengineers.com/getting-started-with-esp32-cam/)
 
@@ -36,7 +37,7 @@ A detailed explanation of the functions and other things can be found here: [Obj
 
 `aufnahme(url, interval, klasse, ordner)`: Serves the purpose of data collection. 'url' is the url of the ESPcam. It's printed on the Serial Monitor of the Arduino IDE when you upload the arduino code. 'interval' refers to the amount of pictores taken. `interval=0.5` is euivalent to a picture taken every 0.5 seconds. 'klasse' refers to the name of the object you're taking the pictures of.
 
-`training_classification(ordner, model_name, epochen, n_full, pool_size, conv_filter, filter_size, droprate, resize padding, val_ordner, aug_parameter, alpha, lr)`: Function to train the neural network. It automatically generates and trains a neural Network with the chosen parameters and saves it as 'model_name'.
+`training_classification(ordner, model_name, epochen, n_full, pool_size, conv_filter, filter_size, droprate, resize padding, val_ordner, aug_parameter, alpha, lr, decay)`: Function to train the neural network. It automatically generates and trains a neural Network with the chosen parameters and saves it as 'model_name'.
 
 `validation_classification(model, val_ordner, padding)`: Given validation data in a directory with the same structure as the directory the model was trained on. With this function, the model can be tested on this data.
 
@@ -73,7 +74,8 @@ training_classification(ordner,
                         val_ordner='daten3val',
                         aug_parameter=['vertical', 0.6,0.05,0.1],
                         alpha=0.001,
-                        lr=0.001)   # Train a neural network for image classification
+                        lr=0.001,
+                        decay=False)   # Train a neural network for image classification
 
 Validation_classification(model_name,
                           val_ordner="daten3val",
