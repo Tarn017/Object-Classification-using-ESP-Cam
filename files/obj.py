@@ -554,7 +554,9 @@ def training_classification(ordner, model_name, epochen, n_full, pool_size, conv
     #model.add(layers.Flatten())
     model.add(layers.GlobalAveragePooling2D(name="gap"))
     for i in range(len(n_full)):
-        model.add(layers.Dense(n_full[i], activation='relu', kernel_initializer='he_normal'))
+        model.add(layers.Dense(n_full[i], use_bias=False, kernel_initializer='he_normal'))
+        model.add(layers.BatchNormalization())
+        model.add(layers.ReLU())
         model.add(layers.Dropout(droprate))
 
     model.add(layers.Dense(num_classes, activation='softmax'))  # 4 statt 3 Klassen
