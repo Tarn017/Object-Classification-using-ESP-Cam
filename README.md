@@ -7,7 +7,7 @@
 
 1.	EspCam mit Adapter verbinden
 2.	esp32 by Espressif im Boardmanager installieren
-3.	Öffne: File -> Examples -> Esp32 -> Camera -> CameraWebServer
+3.	In Arduino IDE öffne: File -> Examples -> Esp32 -> Camera -> CameraWebServer
 4.	Ergänze Wlan-Daten in CameraWebServer.ino
 5.	In der Leiste oben auf board_config.h wechseln
 6.	`#define CAMERA_MODEL_WROVER_KIT` mit // auskommentieren
