@@ -9,7 +9,7 @@
 2.	esp32 by Espressif im Boardmanager installieren
 3.	In Arduino IDE öffne: File -> Examples -> Esp32 -> Camera -> CameraWebServer
 4.	Ergänze Wlan-Daten in CameraWebServer.ino
-5.	In der Leiste oben gegebenenfalls auf board_config.h wechseln (Falls die `#define`-Einstellungen nicht direkt in dieser Datei getroffen werden) 
+5.	In der Tableiste oben gegebenenfalls auf board_config.h wechseln (Falls die `#define`-Einstellungen nicht direkt in dieser Datei getroffen werden) 
 6.	Vor `#define CAMERA_MODEL_WROVER_KIT` die Striche // hinzufügen
 7.	Vor `#define CAMERA_MODEL_AI_THINKER`  // entfernen
 8.	Zurück in CameraWebServer.ino passenden Port auswählen und als Board unter esp32 "AI Thinker Esp32-Cam"
