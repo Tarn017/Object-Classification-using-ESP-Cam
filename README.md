@@ -31,7 +31,7 @@ You have to upload the Arduino-Code to your Microcontroller if you want to be ab
 
 In Python: Import the following functions into your script: `from obj import aufnahme, training_classification, testen_classification, neural_network_classification`
 
-A detailed explanation of the functions and other things can be found here: [Object_Classification](https://github.com/Tarn017/Object-Classification-using-ESP-Cam/blob/main/files/Klassifizierung%20im%20CNN.docx)
+A detailed explanation of the functions and other things can be found here: [Object_Classification](https://github.com/Tarn017/Object-Classification-using-ESP-Cam/blob/main/files/Klassifizierung%20im%20CNN.pdf)
 
 **How to use the functions:**
 
