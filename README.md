@@ -10,7 +10,7 @@
 3.	In Arduino IDE öffne: File -> Examples -> Esp32 -> Camera -> CameraWebServer
 4.	Ergänze Wlan-Daten in CameraWebServer.ino
 5.	In der Leiste oben gegebenenfalls auf board_config.h wechseln (Falls die `#define`-Einstellungen nicht direkt in dieser Datei getroffen werden) 
-6.	`#define CAMERA_MODEL_WROVER_KIT` mit // auskommentieren
+6.	Vor `#define CAMERA_MODEL_WROVER_KIT` die Striche // hinzufügen
 7.	Vor `#define CAMERA_MODEL_AI_THINKER`  // entfernen
 8.	Zurück in CameraWebServer.ino passenden Port auswählen und als Board unter esp32 "AI Thinker Esp32-Cam"
 9.	Code uploaden
@@ -29,7 +29,7 @@ You have to upload the Arduino-Code to your Microcontroller if you want to be ab
 
 **Explanation**
 
-Import the following functions into your script: `from obj import abfrage, training_classification, testen_classification, neural_network_classification`
+In Python: Import the following functions into your script: `from obj import abfrage, training_classification, testen_classification, neural_network_classification`
 
 A detailed explanation of the functions and other things can be found here: [Object_Classification](https://github.com/Tarn017/Object-Classification-using-ESP-Cam/blob/main/files/Klassifizierung%20im%20CNN.docx)
 
@@ -104,7 +104,7 @@ You have to upload the Arduino-Code to your Microcontroller if you want to be ab
 
 **Explanation**
 
-Import the following functions into your script: `from obj import abfrage, training_detection, testen_detection, neural_network_detection`
+In Python: Import the following functions into your script: `from obj import abfrage, training_detection, testen_detection, neural_network_detection`
 
 A detailed explanation of the functions and other things can be found here: [Object_Detection](https://github.com/Tarn017/Object-Classification-using-ESP-Cam/blob/main/files/Detection%20im%20CNN.docx)
 
