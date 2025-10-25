@@ -42,13 +42,17 @@ def aufnahme(url, interval, klasse, ordner):
             response = requests.get(url, timeout=5)
             if response.status_code == 200:
                 # Aktuellen Zeitstempel für den Dateinamen
+                objekte = os.listdir(save_path)
+
+                # Anzahl aller Objekte
+                anzahl = len(objekte)
                 timestamp = time.strftime("%Y%m%d-%H%M%S")
                 filename = os.path.join(save_path, f'capture_{timestamp}.jpg')
 
                 # Bild speichern
                 with open(filename, 'wb') as f:
                     f.write(response.content)
-                print(f'Bild gespeichert: {filename}')
+                print(f'Bild gespeichert: {filename} Objekt-Nummer: {anzahl}')
             else:
                 print(f'Fehler: Statuscode {response.status_code}')
         except requests.RequestException as e:
