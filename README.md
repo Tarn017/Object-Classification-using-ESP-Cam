@@ -29,7 +29,7 @@ You have to upload the Arduino-Code to your Microcontroller if you want to be ab
 
 **Explanation**
 
-In Python: Import the following functions into your script: `from obj import abfrage, training_classification, testen_classification, neural_network_classification`
+In Python: Import the following functions into your script: `from obj import aufnahme, training_classification, testen_classification, neural_network_classification`
 
 A detailed explanation of the functions and other things can be found here: [Object_Classification](https://github.com/Tarn017/Object-Classification-using-ESP-Cam/blob/main/files/Klassifizierung%20im%20CNN.docx)
 
@@ -104,7 +104,7 @@ You have to upload the Arduino-Code to your Microcontroller if you want to be ab
 
 **Explanation**
 
-In Python: Import the following functions into your script: `from obj import abfrage, training_detection, testen_detection, neural_network_detection`
+In Python: Import the following functions into your script: `from obj import aufnahme, training_detection, testen_detection, neural_network_detection`
 
 A detailed explanation of the functions and other things can be found here: [Object_Detection](https://github.com/Tarn017/Object-Classification-using-ESP-Cam/blob/main/files/Detection%20im%20CNN.docx)
 
