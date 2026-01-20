@@ -19,12 +19,12 @@ except RuntimeError:
 
 RANDOM_SEED = 42
 
-def load_data(train_val_path, train_split, img_size, batch_size, use_amp, mode):
+def load_data(train_val_path, train_split, img_size, batch_size, use_amp, aug, mode):
     train_transforms = transforms.Compose([
         transforms.Resize(img_size),
-        transforms.RandomHorizontalFlip(p=0.5),
-        transforms.RandomRotation(15),
-        transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2),
+        transforms.RandomHorizontalFlip(p=aug[0]),
+        transforms.RandomRotation(aug[1]),
+        transforms.ColorJitter(brightness=aug[2], contrast=aug[3], saturation=aug[4]),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406],
                              std=[0.229, 0.224, 0.225])
@@ -101,7 +101,7 @@ def load_data(train_val_path, train_split, img_size, batch_size, use_amp, mode):
 
 
 class SimpleCNN(nn.Module):
-    def __init__(self, conv_filters, full_layers, num_classes):
+    def __init__(self, conv_filters, full_layers, num_classes, droprate):
         super(SimpleCNN, self).__init__()
 
         layers = []
@@ -134,7 +134,7 @@ class SimpleCNN(nn.Module):
             layers.extend([
                 nn.Linear(full_layers[i], full_layers[i + 1]),
                 nn.ReLU(inplace=True),
-                nn.Dropout(0.5)
+                nn.Dropout(droprate)
             ])
 
         layers.append(nn.Linear(full_layers[-1], num_classes))
@@ -143,27 +143,32 @@ class SimpleCNN(nn.Module):
         self.model = nn.Sequential(*layers)
 
     def forward(self, x):
-        return self.model(x)  # Eine Zeile!
+        return self.model(x)
 
 
-def train_model(model, model_name, train_loader, num_epochs, lr, device, use_amp, val_loader):
+def train_model(model, model_name, train_loader, num_epochs, lr, device, use_amp, dec_lr, val_loader):
     from torch.amp import GradScaler, autocast
 
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=lr)
 
     scaler = GradScaler('cuda') if use_amp else None
+    if dec_lr is not None:
+        scheduler = optim.lr_scheduler.CosineAnnealingLR(
+            optimizer,
+            T_max=num_epochs,
+            eta_min=dec_lr
+        )
 
-    scheduler = optim.lr_scheduler.CosineAnnealingLR(
-        optimizer,
-        T_max=num_epochs,
-        eta_min=1e-5
-    )
 
     best_val_acc = 0.0
 
     for epoch in range(num_epochs):
-        current_lr = optimizer.param_groups[0]['lr']
+        if dec_lr is not None:
+            current_lr = optimizer.param_groups[0]['lr']
+        elif dec_lr is None:
+            current_lr=lr
+
         print(f"\nEpoch {epoch + 1}/{num_epochs} - Learning Rate: {current_lr:.6f}")
 
         model.train()
@@ -204,7 +209,9 @@ def train_model(model, model_name, train_loader, num_epochs, lr, device, use_amp
             print(f"Val Loss: {val_loss / len(val_loader):.4f}, Val Acc: {val_acc:.2f}%")
         print(f"Train Loss: {train_loss / len(train_loader):.4f}, Train Acc: {train_acc:.2f}%")
 
-        scheduler.step()
+        if dec_lr is not None:
+            scheduler.step()
+
         if val_loader is not None:
             if val_acc > best_val_acc:
                 best_val_acc = val_acc
@@ -262,12 +269,15 @@ def get_class_names(train_dir):
         if os.path.isdir(os.path.join(train_dir, d))
     ])
 
-def load_model(model_name):
+def load_model(model_name, cnn):
 
     model_name=model_name+'.json'
     with open(model_name, 'r') as f:
         config = json.load(f)
-    model = SimpleCNN(config['conv_filters'], config['fully_layers'], config['num_classes'])
+
+
+    model = SimpleCNN(config['conv_filters'], config['fully_layers'], config['num_classes'], config['droprate'])
+
     model.load_state_dict(torch.load(config['weights']))
     model.eval()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -283,7 +293,7 @@ def evaluate_model(test_path, model_name, img_size=None, class_names=None, mode=
         train_split = 1
         BATCH_SIZE = 32
         model, img_size, class_names = load_model(model_name)
-        test_loader, class_to_idx = load_data(test_path, train_split, img_size, BATCH_SIZE, use_amp=False, mode='test')
+        test_loader, class_to_idx = load_data(test_path, train_split, img_size, BATCH_SIZE, use_amp=False, aug=[0,0,0,0,0], mode='test')
     elif mode==1:
         test_loader = test_path
         model= model_name
@@ -350,7 +360,7 @@ def evaluate_model(test_path, model_name, img_size=None, class_names=None, mode=
     print(f1_score)
     return val_acc, val_loss, f1_score
 
-def CNN(train_path, epochs, lr, conv_filters, fully_layers, resize, model_name, train_split):
+def CNN(train_path, epochs, lr, conv_filters, fully_layers, resize, model_name, train_split, droprate=0, augmentation=[0,0,0,0,0], dec_lr=None):
     vorname=model_name
     model_name=model_name+'.pth'
     torch.manual_seed(RANDOM_SEED)
@@ -380,9 +390,9 @@ def CNN(train_path, epochs, lr, conv_filters, fully_layers, resize, model_name, 
         print(f"resize images to {img_size}")
 
     if train_split<1:
-        train_loader, val_loader, class_to_idx = load_data(train_path, train_split, img_size, BATCH_SIZE, use_amp, mode='train')
+        train_loader, val_loader, class_to_idx = load_data(train_path, train_split, img_size, BATCH_SIZE, use_amp, aug=augmentation, mode='train')
     else:
-        train_loader, class_to_idx = load_data(train_path, train_split, img_size, BATCH_SIZE, use_amp,mode='train')
+        train_loader, class_to_idx = load_data(train_path, train_split, img_size, BATCH_SIZE, use_amp, aug=augmentation, mode='train')
 
 
     class_names = get_class_names(train_path)
@@ -390,17 +400,18 @@ def CNN(train_path, epochs, lr, conv_filters, fully_layers, resize, model_name, 
     print("Class Labels:")
     print(class_names)
 
-    model = SimpleCNN(conv_filters, fully_layers, num_classes=num_classes)
+    model = SimpleCNN(conv_filters, fully_layers, num_classes=num_classes,droprate=droprate)
     model = model.to(device)
+    print(model)
     print(f"Model created with {sum(p.numel() for p in model.parameters())} parameters")
 
     print("\nStarting training...")
     if train_split<1:
-        model = train_model(model, model_name, train_loader, epochs, lr, device, use_amp, val_loader)
+        model = train_model(model, model_name, train_loader, epochs, lr, device, use_amp, dec_lr, val_loader)
         model.load_state_dict(torch.load(model_name))
         test_acc, test_loss, test_f1 = evaluate_model(val_loader, model, img_size, class_names, mode=1)
     else:
-        model = train_model(model, model_name, train_loader, epochs, lr, device, use_amp, val_loader=None)
+        model = train_model(model, model_name, train_loader, epochs, lr, device, use_amp, dec_lr, val_loader=None)
 
     config = {
         "conv_filters": conv_filters,
@@ -409,6 +420,99 @@ def CNN(train_path, epochs, lr, conv_filters, fully_layers, resize, model_name, 
         "weights": model_name,
         "img_size": img_size,
         "class_names": class_names,
+        "droprate": droprate,
+    }
+
+    with open(vorname+'.json', 'w') as f:
+        json.dump(config, f, indent=2)
+
+
+class SimpleFFN(nn.Module):
+    def __init__(self, fully_layers, num_classes, droprate, img_size, in_channels=3, use_bn=True):
+        super().__init__()
+
+        H, W = img_size
+        in_features = in_channels * H * W
+
+        layers = [nn.Flatten()]
+
+        prev = in_features
+        for h in fully_layers:
+            layers.append(nn.Linear(prev, h))
+            if use_bn:
+                layers.append(nn.BatchNorm1d(h))
+            layers.append(nn.ReLU(inplace=True))
+            layers.append(nn.Dropout(droprate))
+            prev = h
+
+        layers.append(nn.Linear(prev, num_classes))
+        self.model = nn.Sequential(*layers)
+
+    def forward(self, x):
+        return self.model(x)
+
+
+def FFN(train_path, epochs, lr, fully_layers, resize, model_name, train_split, droprate=0, augmentation=[0,0,0,0,0], dec_lr=None):
+    vorname=model_name
+    model_name=model_name+'.pth'
+    torch.manual_seed(RANDOM_SEED)
+    np.random.seed(RANDOM_SEED)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    use_amp = torch.cuda.is_available()
+    print(f"Using device: {device}")
+    if use_amp:
+        print("Mixed Precision Training: ENABLED")
+        torch.backends.cudnn.benchmark = True
+        torch.backends.cuda.matmul.allow_tf32 = True
+        torch.backends.cudnn.allow_tf32 = True
+    else:
+        print("Mixed Precision Training: DISABLED (CPU mode)")
+
+    # Hyperparameter
+    BATCH_SIZE = 32
+    #lr = 0.005
+    #epochs = 4
+    #train_split = 0.9
+
+    #train_path = "./train_val/"
+    img_size = get_size(train_path)
+    print(img_size)
+    if resize != None:
+        img_size = resize
+        print(f"resize images to {img_size}")
+
+    if train_split<1:
+        train_loader, val_loader, class_to_idx = load_data(train_path, train_split, img_size, BATCH_SIZE, use_amp, aug=augmentation, mode='train')
+    else:
+        train_loader, class_to_idx = load_data(train_path, train_split, img_size, BATCH_SIZE, use_amp, aug=augmentation, mode='train')
+
+
+    class_names = get_class_names(train_path)
+    num_classes=len(class_names)
+    print("Class Labels:")
+    print(class_names)
+
+    model = SimpleFFN(fully_layers, num_classes=num_classes,droprate=droprate, img_size=img_size)
+    model = model.to(device)
+    print(model)
+    print(f"Model created with {sum(p.numel() for p in model.parameters())} parameters")
+
+    print("\nStarting training...")
+    if train_split<1:
+        model = train_model(model, model_name, train_loader, epochs, lr, device, use_amp, dec_lr, val_loader)
+        model.load_state_dict(torch.load(model_name))
+        test_acc, test_loss, test_f1 = evaluate_model(val_loader, model, img_size, class_names, mode=1)
+    else:
+        model = train_model(model, model_name, train_loader, epochs, lr, device, use_amp, dec_lr, val_loader=None)
+
+    config = {
+        "conv_filters": None,
+        "fully_layers": fully_layers,
+        "num_classes": num_classes,
+        "weights": model_name,
+        "img_size": img_size,
+        "class_names": class_names,
+        "droprate": droprate,
     }
 
     with open(vorname+'.json', 'w') as f:
@@ -416,16 +520,32 @@ def CNN(train_path, epochs, lr, conv_filters, fully_layers, resize, model_name, 
 
 
 if __name__ == "__main__":
-
+    """
     CNN(
         train_path="./klass_daten/",
-        epochs=50,
+        epochs=10,
         lr=0.005,
         conv_filters=[16, 32, 64, 128],
         fully_layers=[256],
         resize=(128, 128),
         model_name='peter',
-        train_split=0.9
+        train_split=0.9,
+        droprate=0.5,
+        augmentation=[0.1,0.1,0.1,0.1,0.1],
+        dec_lr=10e-5
     )
 
     test_acc, test_loss, test_f1 = evaluate_model(test_path='./klass_daten/', model_name='peter')
+    """
+    FFN(
+        train_path="./klass_daten/",
+        epochs=15,
+        lr=0.001,
+        fully_layers=[1000,1000,1000],
+        resize=(65, 65),
+        model_name='peter',
+        train_split=0.9,
+        droprate=0.5,
+        augmentation=[0.1, 0.1, 0.1, 0.1, 0.1],
+        dec_lr=10e-5
+    )
