@@ -2,37 +2,34 @@
 
 **Material:** ESP32-CAM, ESP32_CAM-adapter, Arduino Nano ESP32, Wi-Fi router
 **Software:** Arduino, Python
-**Steps:**
 
-1.         EspCam einrichten
-2.     Neuronales Netz trainieren
-3. Neuronales Netz testen
-4. Arduino Microcontroller einrichten
-5. Trainiertes Netz auf Microcontroller deployen
+**Steps:**  
+1. EspCam einrichten
+2. Daten sammeln  
+3. Neuronales Netz trainieren  
+4. Neuronales Netz testen  
+5. Arduino Microcontroller einrichten  
+6. Trainiertes Netz auf Microcontroller deployen  
 
-**Einrichten der EspCam:**
+# 1. Einrichten der EspCam
 
-1.	EspCam mit Adapter verbinden
-2.	esp32 by Espressif im Boardmanager installieren
-3.	In Arduino IDE öffne: File -> Examples -> Esp32 -> Camera -> CameraWebServer
-4.	Ergänze Wlan-Daten in CameraWebServer.ino
-5.	In der Tableiste oben gegebenenfalls auf board_config.h wechseln (Falls die `#define`-Einstellungen nicht direkt in dieser Datei getroffen werden) 
-6.	Vor `#define CAMERA_MODEL_WROVER_KIT` die Striche // hinzufügen
-7.	Vor `#define CAMERA_MODEL_AI_THINKER`  // entfernen
-8.	Zurück in CameraWebServer.ino passenden Port auswählen und als Board unter esp32 "AI Thinker Esp32-Cam"
-9.	Code uploaden
+1.	EspCam auf Adapter stecken
+2.	In der Arduino IDE: Board-Manager öffnen über Tools -> Board -> Boards Manager
+3.	esp32 by Espressif im Boardmanager installieren (Über Suchleiste oben suchen)
+4.	In Arduino IDE: File -> Examples -> Esp32 -> Camera -> CameraWebServer
+5.	Ergänze Wlan-Daten in CameraWebServer.ino
+6.	In der Tableiste oben gegebenenfalls auf board_config.h wechseln (Falls die `#define`-Einstellungen nicht direkt in dieser Datei getroffen werden) 
+7.	Vor `#define CAMERA_MODEL_WROVER_KIT` die Striche // hinzufügen
+8.	Vor `#define CAMERA_MODEL_AI_THINKER`  // entfernen
+9.	Zurück in CameraWebServer.ino passenden Port auswählen und als Board unter esp32 "AI Thinker Esp32-Cam"
+10.	Code uploaden
 
-Eine genauere Beschreibung der einzelnen Schritte findet sich unter [Getting Started With ESP32-CAM](https://lastminuteengineers.com/getting-started-with-esp32-cam/)
+Eine genauere Beschreibung der einzelnen Schritte findet ihr unter [Getting Started With ESP32-CAM](https://lastminuteengineers.com/getting-started-with-esp32-cam/)
 
-# Object Classification 
+# Daten Sammeln
 
-**Download**
-
-Download the following script: [obj](https://github.com/Tarn017/Object-Classification-using-ESP-Cam/blob/main/files/obj.py). It contains all relevant functions.
-
-Arduino-Code:  [script](https://github.com/Tarn017/Object-Classification-using-ESP-Cam/blob/main/files/NanoEsp_classification.ino)
-
-You have to upload the Arduino-Code to your Microcontroller if you want to be able to use Classification with it. After the upload, the IP will be displayed on the Serial Monitor.
+Erstellt in eurer Python IDE ein neues Projekt und legt ein nues Haupt-File an (bspw. main.py).  
+Ladet das folgende Skript herunter und kopiert es in euer Python-Projekt sodass es direkt neben eurem Haupt-File zu sehen ist: [project.py herunterladen](https://github.com/Tarn017/Object-Classification-using-ESP-Cam/raw/main/src/project.py)
 
 **Explanation**
 
