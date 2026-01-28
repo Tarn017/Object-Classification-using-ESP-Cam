@@ -2,6 +2,13 @@
 
 **Material:** ESP32-CAM, ESP32_CAM-adapter, Arduino Nano ESP32, Wi-Fi router
 **Software:** Arduino, Python
+**Steps:**
+
+1.         EspCam einrichten
+2.     Neuronales Netz trainieren
+3. Neuronales Netz testen
+4. Arduino Microcontroller einrichten
+5. Trainiertes Netz auf Microcontroller deployen
 
 **Einrichten der EspCam:**
 
