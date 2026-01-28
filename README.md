@@ -23,18 +23,22 @@
 8.	Vor `#define CAMERA_MODEL_AI_THINKER`  // entfernen
 9.	Zurück in CameraWebServer.ino passenden Port auswählen und als Board unter esp32 "AI Thinker Esp32-Cam"
 10.	Code uploaden
+11.	Auf dem Serial Monitor wir nun eine URL ausgegeben:
+
+![cam_url](https://raw.githubusercontent.com/Tarn017/Object-Classification-using-ESP-Cam/main/assets/cam_url.png)
 
 Eine genauere Beschreibung der einzelnen Schritte findet ihr unter [Getting Started With ESP32-CAM](https://lastminuteengineers.com/getting-started-with-esp32-cam/)
 
 # 2. Daten Sammeln
 
+**Einrichten:**  
 Erstellt in eurer Python IDE ein neues Projekt und legt ein nues Haupt-File an (bspw. main.py).  
-Ladet das folgende Skript herunter und kopiert es in euer Python-Projekt sodass es direkt neben eurem Haupt-File zu sehen ist: [project.py](https://github.com/Tarn017/Object-Classification-using-ESP-Cam/blob/main/src/project.py):
+Ladet das folgende Skript herunter und kopiert es in euer Python-Projekt sodass es direkt neben eurem Haupt-File zu sehen ist: [project.py](https://github.com/Tarn017/Object-Classification-using-ESP-Cam/blob/main/src/project.py)
 
 ![project.py Screenshot](https://raw.githubusercontent.com/Tarn017/Object-Classification-using-ESP-Cam/main/assets/project_py.png)
 
-
-**Explanation**
+**Los gehts:**  
+Beim einrichten
 
 In Python: Import the following functions into your script: `from obj import aufnahme, training_classification, testen_classification, neural_network_classification`
 
