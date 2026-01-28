@@ -29,7 +29,10 @@ Eine genauere Beschreibung der einzelnen Schritte findet ihr unter [Getting Star
 # 2. Daten Sammeln
 
 Erstellt in eurer Python IDE ein neues Projekt und legt ein nues Haupt-File an (bspw. main.py).  
-Ladet das folgende Skript herunter und kopiert es in euer Python-Projekt sodass es direkt neben eurem Haupt-File zu sehen ist: [project.py](https://github.com/Tarn017/Object-Classification-using-ESP-Cam/blob/main/src/project.py)
+Ladet das folgende Skript herunter und kopiert es in euer Python-Projekt sodass es direkt neben eurem Haupt-File zu sehen ist: [project.py](https://github.com/Tarn017/Object-Classification-using-ESP-Cam/blob/main/src/project.py):
+
+![project.py Screenshot](https://raw.githubusercontent.com/Tarn017/Object-Classification-using-ESP-Cam/main/assets/project_py.png)
+
 
 **Explanation**
 
