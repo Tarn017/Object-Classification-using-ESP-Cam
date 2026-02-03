@@ -1,5 +1,7 @@
 # Computer Vision using ESP-Cam
 
+Ziel dieser Anleitung ist es Daten für ein neuronales Netz mittels einer EspCam zu sammeln, dieses im Anschluss zu trainieren und es sich auf einem Arduino Microcontroller zu Nutze zu machen.
+
 **Material:** ESP32-CAM, ESP32_CAM-adapter, Arduino Nano ESP32, Wi-Fi router
 **Software:** Arduino, Python
 
@@ -61,7 +63,7 @@ if __name__ == "__main__":
 
 Zum starten kann nun einfach das Skript ausgeführt werden. Für jede Klasse, für die Daten gesammelt werden sollen, muss das Skript separat ausgeführt werden. Ein umbenennen von *klasse* ist während das Skript läuft nicht möglich.
 
-# 3. Neuonales Netz trainieren
+# 3. Neuonales Netz Trainieren
 
 Um ein Modell zu trainieren, muss nun zusätzlich ein Trainingsskript am Anfang importiert werden: `from project import CNN`. Konkret handelt es sich hierbei um ein Convolutional Neural Network, das sich flexibel einstellen lässt. Wichtig ist, dass die Funktion `CNN()` ebenfalls wieder eingerückt unter `if __name__ == "__main__":` steht. Hier eine kurze Erklärung, wie man die Funktion nutzt:  
 `CNN(train_path, epochs, lr, conv_filters, fully_layers, resize, model_name, train_split, droprate, augmentation, dec_lr)`  
@@ -96,7 +98,7 @@ if __name__ == "__main__":
         dec_lr=0.001
     )
 ```
-# 4. Neuronales Netz testen
+# 4. Neuronales Netz Testen
 
 Um das Modell zu testen muss zusätzlich oben das entsprechende Skript importiert werden: `from project import testen_classification`. Diese nimmt live Bilder mit der EspCam auf und klassifiziert diese im Anschluss direkt.  
 `testen_classification(url, model_name, live, interval)`:  
@@ -105,7 +107,7 @@ Um das Modell zu testen muss zusätzlich oben das entsprechende Skript importier
 *live* ist gleich True oder False. Wenn False ausgewählt ist, wird nur ein einziges Bild aufgenommen und klassifiziert.
 *interval* ist die Dauer zwischen zwei Aufnahmen in Sekunden, falls True ausgewählt ist.
 ```python
-from project import CNN
+from project import testen_classification
 
 if __name__ == "__main__":
     testen_classification(url='http://172.20.10.3', 
@@ -113,3 +115,17 @@ if __name__ == "__main__":
                               live=True, 
                               interval=3)
 ```
+
+# 5. Arduino Microcontroller Einrichten
+
+Lade das folgender Arduino-Skript herunter und öffne es in der Arduino-IDE: [project.py](https://github.com/Tarn017/Object-Classification-using-ESP-Cam/blob/main/files/NanoEsp_classification.ino)
+
+Füge die passenden Wlan-Daten ein:
+
+![wlan](https://raw.githubusercontent.com/Tarn017/Object-Classification-using-ESP-Cam/main/assets/wlan.png)
+
+Führe das Skript im nächsten Schritt aus. Öffne anschließend den Serial Monitor. Auf disem sollte nun die IP Adresse des Microcontrollers ausgegeben werden. Ist dort nichts zu sehen, drücke einmal den Reset-Button auf dem Microcontroller.
+
+![arduino_ip](https://raw.githubusercontent.com/Tarn017/Object-Classification-using-ESP-Cam/main/assets/arduino_ip.png)
+
+# 6. Neuronales Netz Deployen
