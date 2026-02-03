@@ -89,11 +89,27 @@ if __name__ == "__main__":
         conv_filters=[16, 32, 64, 128],
         fully_layers=[256],
         resize=(128, 128),
-        model_name='peter2',
+        model_name='peter',
         train_split=0.9,
         droprate=0,
         augmentation=[0, 0, 0, 0, 0],
         dec_lr=0.001
     )
 ```
+# 4. Neuronales Netz testen
 
+Um das Modell zu testen muss zusätzlich oben das entsprechende Skript importiert werden: `from project import testen_classification`. Diese nimmt live Bilder mit der EspCam auf und klassifiziert diese im Anschluss direkt.  
+`testen_classification(url, model_name, live, interval)`:  
+*url* entspricht wieder der URL der EspCam.
+*model_name* entspricht dem Namen des Modells welches getestet werden soll.
+*live* ist gleich True oder False. Wenn False ausgewählt ist, wird nur ein einziges Bild aufgenommen und klassifiziert.
+*interval* ist die Dauer zwischen zwei Aufnahmen in Sekunden, falls True ausgewählt ist.
+```python
+from project import CNN
+
+if __name__ == "__main__":
+    testen_classification(url='http://172.20.10.3', 
+                              model_name='peter', 
+                              live=True, 
+                              interval=3)
+```
