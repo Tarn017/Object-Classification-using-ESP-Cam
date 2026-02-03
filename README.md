@@ -39,6 +39,13 @@ Ladet das folgende Skript herunter und kopiert es in euer Python-Projekt sodass 
 
 ![project.py Screenshot](https://raw.githubusercontent.com/Tarn017/Object-Classification-using-ESP-Cam/main/assets/project_py.png)
 
+**Abhängigkeiten installieren:**
+Lade die folgende Datei herunter und kopiere sie in deinen Projektordner: [requirements_class.txt](https://github.com/Tarn017/Object-Classification-using-ESP-Cam/blob/main/src/requirements_class.txt)
+
+Gehe anschließend in deiner IDE unten auf das Terminal und installiere alle Pakete mit `pip install -r requirements_class.txt`:
+
+![requirements Screenshot](https://raw.githubusercontent.com/Tarn017/Object-Classification-using-ESP-Cam/main/assets/requirements.png)
+
 **Los gehts:**  
 Beim einrichten der EspCam wurde eine URL ausgegeben. Diese wird für die nächsten Schritte benötigt.  
 Geht in euer Hauptskrip und fügt ganz oben die Zeile `from project import aufnahme` ein. Als nächstes fügt ihr darunter `if __name__ == "__main__":` ein. Alles was hiernah kommt muss nach rechts eingerückt werden. Nun kann `aufnahme` genutzt werden um Bilddaten zu sammeln. Sie nimmt alle paar Sekunden ein Bild auf und speichert dieses automatisch in einer benannten Klasse. Die Funktion ist folgendermaßen aufgebaut:  
