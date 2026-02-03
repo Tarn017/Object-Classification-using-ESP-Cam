@@ -39,6 +39,13 @@ Ladet das folgende Skript herunter und kopiert es in euer Python-Projekt sodass 
 
 ![project.py Screenshot](https://raw.githubusercontent.com/Tarn017/Object-Classification-using-ESP-Cam/main/assets/project_py.png)
 
+**Abhängigkeiten installieren:**
+Lade die folgende Datei herunter und kopiere sie in deinen Projektordner: [requirements_class.txt](https://github.com/Tarn017/Object-Classification-using-ESP-Cam/blob/main/src/requirements_class.txt)
+
+Gehe anschließend in deiner IDE unten auf das Terminal und installiere alle Pakete mit `pip install -r requirements_class.txt`:
+
+![requirements Screenshot](https://raw.githubusercontent.com/Tarn017/Object-Classification-using-ESP-Cam/main/assets/requirements.png)
+
 **Los gehts:**  
 Beim einrichten der EspCam wurde eine URL ausgegeben. Diese wird für die nächsten Schritte benötigt.  
 Geht in euer Hauptskrip und fügt ganz oben die Zeile `from project import aufnahme` ein. Als nächstes fügt ihr darunter `if __name__ == "__main__":` ein. Alles was hiernah kommt muss nach rechts eingerückt werden. Nun kann `aufnahme` genutzt werden um Bilddaten zu sammeln. Sie nimmt alle paar Sekunden ein Bild auf und speichert dieses automatisch in einer benannten Klasse. Die Funktion ist folgendermaßen aufgebaut:  
@@ -82,11 +89,27 @@ if __name__ == "__main__":
         conv_filters=[16, 32, 64, 128],
         fully_layers=[256],
         resize=(128, 128),
-        model_name='peter2',
+        model_name='peter',
         train_split=0.9,
         droprate=0,
         augmentation=[0, 0, 0, 0, 0],
         dec_lr=0.001
     )
 ```
+# 4. Neuronales Netz testen
 
+Um das Modell zu testen muss zusätzlich oben das entsprechende Skript importiert werden: `from project import testen_classification`. Diese nimmt live Bilder mit der EspCam auf und klassifiziert diese im Anschluss direkt.  
+`testen_classification(url, model_name, live, interval)`:  
+*url* entspricht wieder der URL der EspCam.
+*model_name* entspricht dem Namen des Modells welches getestet werden soll.
+*live* ist gleich True oder False. Wenn False ausgewählt ist, wird nur ein einziges Bild aufgenommen und klassifiziert.
+*interval* ist die Dauer zwischen zwei Aufnahmen in Sekunden, falls True ausgewählt ist.
+```python
+from project import CNN
+
+if __name__ == "__main__":
+    testen_classification(url='http://172.20.10.3', 
+                              model_name='peter', 
+                              live=True, 
+                              interval=3)
+```
