@@ -129,3 +129,19 @@ Führe das Skript im nächsten Schritt aus. Öffne anschließend den Serial Moni
 ![arduino_ip](https://raw.githubusercontent.com/Tarn017/Object-Classification-using-ESP-Cam/main/assets/arduino_ip.png)
 
 # 6. Neuronales Netz Deployen
+
+Im nächsten und letzten Schritt, werden Kamera, neuronales Netz und Microcontroller nun verbunden. Das Programm welches dafür gleich genutzt wird, baut dafür eine Verbindung sowohl zu Kamera als auch zu Microcontroller auf. Wird nun ein Signal vom Microcontroller gesendet (aktuell ist er so programmiert, dass ein Signal gesendet wird, wenn der an Pin D2 angeschlossene Knopf gedrückt wird, kann aber beliebig abgeändert werden), dann leitet der Laptop/PC dieses weiter an die EspCam, die ein Bild aufnimmt. Dieses wird zurück an den Laptop gesendet, der dieses klassifiziert. Das Ergebnis dieses Klassifikation wird anschließend zurück an den Microcontroller gesendet. Die vorhergesagte Klasse wird dort im String *klasse* gespeichert und die Sicherheit der Vorhersage in *conf*. Für diese Kommunikation wird das folgende Skript verwendet:  
+`neural_network_classification(url,arduino_ip, model_name)`:  
+*url* entspricht der URL der EspCam.
+*arduino_ip* enspricht der zuvor ausgegebenen IP-Adresse des Arduinos.
+*model_name* entspricht dem Namen des Modells, das genutzt werden soll.
+
+```python
+from project import neural_network_classification
+
+if __name__ == "__main__":
+    neural_network_classification(url='http://172.20.10.3',
+                                  arduino_ip='172.20.10.4',
+                                  model_name='peter')
+```
+Das Skript muss nun ausgeführt werden. Achte dabei darauf, dass sich alle Geräte im selben Wlan befinden. Ist alles korrekt, wird auf der Konsole in der Arduino-IDE `Client verbunden.` ausgegeben. 
