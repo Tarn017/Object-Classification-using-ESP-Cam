@@ -44,7 +44,7 @@ Ladet das folgende Skript herunter und kopiert es in euer Python-Projekt sodass 
 **Abhängigkeiten installieren:**
 Lade die folgende Datei herunter und kopiere sie in deinen Projektordner: [requirements_class.txt](https://github.com/Tarn017/Object-Classification-using-ESP-Cam/blob/main/src/requirements_class.txt)
 
-Gehe anschließend in deiner IDE unten auf das Terminal und installiere alle Pakete mit `pip install -r requirements_class.txt`:
+Gehe anschließend in deiner IDE unten auf das Terminal und installiere alle Pakete mit `pip install -r requirements_class.txt`. Falls du dich an einem Linux-Rechner mit beschränktem Arbeitsspeicher befindest gehe für die Installation den hier beschriebenen Weg [Linux](https://github.com/Tarn017/Object-Classification-using-ESP-Cam/blob/main/src/requirements_class.txt).
 
 ![requirements Screenshot](https://raw.githubusercontent.com/Tarn017/Object-Classification-using-ESP-Cam/main/assets/requirements.png)
 
