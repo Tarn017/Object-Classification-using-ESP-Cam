@@ -22,7 +22,7 @@ Ziel dieser Anleitung ist es Daten für ein neuronales Netz mittels einer EspCam
 5.	In Arduino IDE: File -> Examples -> Esp32 -> Camera -> CameraWebServer
 6.	Ergänze SSID (Name) und Passwort des Wlans in CameraWebServer.ino
 7.	In der Tableiste oben gegebenenfalls auf board_config.h wechseln (Falls die `#define`-Einstellungen nicht direkt in dieser Datei getroffen werden) 
-8.	Vor `#define CAMERA_MODEL_WROVER_KIT` die Striche // hinzufügen
+8.	Vor `#define CAMERA_MODEL_WROVER_KIT` die Striche // hinzufügen (Falls irgendwo anders // fehlt, ebenfalls davor einfügen)
 9.	Vor `#define CAMERA_MODEL_AI_THINKER`  // entfernen
 10.	Code uploaden
 11.	Auf dem Serial Monitor wir nun eine URL ausgegeben:
