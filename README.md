@@ -18,12 +18,12 @@ Ziel dieser Anleitung ist es Daten für ein neuronales Netz mittels einer EspCam
 1.	EspCam auf Adapter stecken
 2.	In der Arduino IDE: Board-Manager öffnen über Tools -> Board -> Boards Manager
 3.	esp32 by Espressif im Boardmanager installieren (Über Suchleiste oben suchen)
-4.	In Arduino IDE: File -> Examples -> Esp32 -> Camera -> CameraWebServer
-5.	Ergänze Wlan-Daten in CameraWebServer.ino
-6.	In der Tableiste oben gegebenenfalls auf board_config.h wechseln (Falls die `#define`-Einstellungen nicht direkt in dieser Datei getroffen werden) 
-7.	Vor `#define CAMERA_MODEL_WROVER_KIT` die Striche // hinzufügen
-8.	Vor `#define CAMERA_MODEL_AI_THINKER`  // entfernen
-9.	Zurück in CameraWebServer.ino passenden Port auswählen und als Board unter esp32 "AI Thinker Esp32-Cam"
+4.	Wähle als Board unter esp32 "AI Thinker Esp32-Cam" und den passenden Port
+5.	In Arduino IDE: File -> Examples -> Esp32 -> Camera -> CameraWebServer
+6.	Ergänze Wlan-Daten (SSID und PAsswort) in CameraWebServer.ino
+7.	In der Tableiste oben gegebenenfalls auf board_config.h wechseln (Falls die `#define`-Einstellungen nicht direkt in dieser Datei getroffen werden) 
+8.	Vor `#define CAMERA_MODEL_WROVER_KIT` die Striche // hinzufügen
+9.	Vor `#define CAMERA_MODEL_AI_THINKER`  // entfernen
 10.	Code uploaden
 11.	Auf dem Serial Monitor wir nun eine URL ausgegeben:
 
