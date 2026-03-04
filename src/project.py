@@ -289,8 +289,25 @@ def test_model(val_loader, model, criterion, device, use_amp):
 
 
 def get_size(train_dir):
-    sample_path = os.path.join(train_dir, os.listdir(train_dir)[0],
-                               os.listdir(os.path.join(train_dir, os.listdir(train_dir)[0]))[0])
+    # Filter for directories and ignore hidden files like .DS_Store
+    subdirs = [d for d in os.listdir(train_dir)
+               if os.path.isdir(os.path.join(train_dir, d)) and not d.startswith('.')]
+
+    if not subdirs:
+        raise RuntimeError(f"No subdirectories found in {train_dir}")
+
+    # Use the first valid subdirectory
+    first_subdir = subdirs[0]
+    subdir_path = os.path.join(train_dir, first_subdir)
+
+    # Filter for files inside the subdirectory
+    files = [f for f in os.listdir(subdir_path)
+             if os.path.isfile(os.path.join(subdir_path, f)) and not f.startswith('.')]
+
+    if not files:
+        raise RuntimeError(f"No files found in {subdir_path}")
+
+    sample_path = os.path.join(subdir_path, files[0])
     with Image.open(sample_path) as img:
         img_width, img_height = img.size
     print(f"Ermittelte Bildgröße der Trainingsdaten: {img_height}x{img_width}")
@@ -301,7 +318,9 @@ def get_class_names(train_dir):
     return sorted([
         d for d in os.listdir(train_dir)
         if os.path.isdir(os.path.join(train_dir, d))
+        and not d.startswith('.')  # ← diesen Check ergänzen
     ])
+
 
 def load_model(model_name):
 
@@ -662,7 +681,7 @@ def testen_classification(url, model_name, live=False, interval=3):
             return None
         time.sleep(interval)
 
-def neural_network_classification(url, arduino_ip, port, model_name):
+def neural_network_classification(url, arduino_ip, model_name, port=12345):
     arduino_ip = arduino_ip  # IP-Adresse des Arduino
     port = port  # Muss mit der Portnummer im Arduino-Sketch übereinstimmen
     url = url_capture(url)
