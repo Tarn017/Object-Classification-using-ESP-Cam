@@ -120,6 +120,7 @@ if __name__ == "__main__":
 
 Lade das folgender Arduino-Skript herunter und öffne es in der Arduino-IDE: [NanoEsp_classification.ino](https://github.com/Tarn017/Object-Classification-using-ESP-Cam/blob/main/files/NanoEsp_classification.ino)
 
+Lade im Boardmanager `Arduino ESP32 Boards` herunter. Wähler unter Tools -> Boards -> Arduino ESP32 Boards -> Arduino Nano Esp32
 Füge die passenden Wlan-Daten ein:
 
 ![wlan](https://raw.githubusercontent.com/Tarn017/Object-Classification-using-ESP-Cam/main/assets/wlan.png)
