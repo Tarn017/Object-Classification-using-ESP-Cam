@@ -7,7 +7,7 @@ bekannte Fehlermeldungen:
 - "\r" hinten an Dateinamen
 - Datei nicht gefunden
 
-1. den Befehl `cd .venv/` im Terminal eingeben und ENTER drücken
+1. den Befehl `cd .venv/` im Terminal eingeben und ENTER drücken. Anschließend `bash setup_linux.sh` ausführen
 2. den Inhalt der Dati "setup_linux.sh" komplett kopieren
 3. in das PyCharm-Terminal einfügen
 4. ENTER drücken und warten
