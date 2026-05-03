@@ -1,4 +1,3 @@
-cd .venv/ 
 ls
 echo "[INFO] entered .venv/"
 pip install --upgrade pip
