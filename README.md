@@ -25,7 +25,7 @@ Ziel dieser Anleitung ist es Daten für ein neuronales Netz mittels einer EspCam
 8.	Vor `#define CAMERA_MODEL_WROVER_KIT` die Striche // hinzufügen (Falls irgendwo anders // fehlt, ebenfalls davor einfügen)
 9.	Vor `#define CAMERA_MODEL_AI_THINKER`  // entfernen
 10.	Code uploaden
-11.	Auf dem Serial Monitor wir nun eine URL ausgegeben:
+11.	Auf dem Serial Monitor (Rechts oben öffnen) wir nun eine URL ausgegeben. Falls nichts leserliches ausgegeben wird, wählt rechts auf dem Reiter "***baud" 115200 aus:
 
 ![cam_url](https://raw.githubusercontent.com/Tarn017/Object-Classification-using-ESP-Cam/main/assets/cam_url.png)
 
